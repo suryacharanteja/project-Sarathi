@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="wheelGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </radialGradient>
+    <radialGradient id="hubGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c7d2fe"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Outer rim -->
+  <circle cx="256" cy="256" r="220" fill="none" stroke="url(#wheelGrad)" stroke-width="28"/>
+
+  <!-- 8 spokes -->
+  <g stroke="url(#wheelGrad)" stroke-width="16" stroke-linecap="round">
+    <line x1="256" y1="56"  x2="256" y2="456"/>
+    <line x1="56"  y1="256" x2="456" y2="256"/>
+    <line x1="113" y1="113" x2="399" y2="399"/>
+    <line x1="399" y1="113" x2="113" y2="399"/>
+  </g>
+
+  <!-- Hub ring -->
+  <circle cx="256" cy="256" r="52" fill="url(#hubGrad)" stroke="#312e81" stroke-width="8"/>
+
+  <!-- Mic body (centre) -->
+  <rect x="240" y="230" width="32" height="40" rx="10" fill="#1e1b4b"/>
+
+  <!-- Mic stand -->
+  <path d="M248 270 Q248 295 256 295 Q264 295 264 270" fill="none" stroke="#1e1b4b" stroke-width="5" stroke-linecap="round"/>
+  <line x1="249" y1="294" x2="263" y2="294" stroke="#1e1b4b" stroke-width="5" stroke-linecap="round"/>
+</svg>

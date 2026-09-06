@@ -1,0 +1,16 @@
+@import 'tailwindcss';
+
+/*
+ * Stealth requirement: the OS mouse cursor is composited by Windows
+ * separately from any app's window content during screen capture, so a
+ * shape change (e.g. the text I-beam) over what looks like blank space to
+ * a screen-share viewer is a visible tell even though our window itself is
+ * hidden from capture. Lock the cursor to a single static shape everywhere,
+ * with no exceptions — including text inputs — since even that shape
+ * change reads as a tell during a live share. Typing/selection still work
+ * identically; only the rendered cursor shape is affected.
+ */
+* {
+  cursor: default !important;
+  user-select: none;
+}

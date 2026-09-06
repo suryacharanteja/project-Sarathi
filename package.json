@@ -1,0 +1,74 @@
+{
+  "name": "sarathi",
+  "version": "1.8.0",
+  "description": "Sarathi – AI-powered teleprompter & webinar co-pilot",
+  "author": "CharanTheAIGuy",
+  "license": "MIT",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc --noEmit",
+    "dist:win": "npm run build && electron-builder --win nsis"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@huggingface/transformers": "^4.2.0",
+    "clsx": "^2.1.1",
+    "dotenv": "^16.3.1",
+    "electron-audio-loopback": "^1.0.6",
+    "lucide-react": "^1.31.0",
+    "mammoth": "^1.12.1",
+    "pdf-parse": "^2.4.5",
+    "screenshot-desktop": "^1.15.0",
+    "sonner": "^2.0.8",
+    "ws": "^8.19.0",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@electron-toolkit/tsconfig": "^2.0.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@types/ws": "^8.18.1",
+    "@vitejs/plugin-react": "^4.7.0",
+    "electron": "^43.4.1",
+    "electron-builder": "^26.15.7",
+    "electron-vite": "^5.0.0",
+    "esbuild": "^0.25.6",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vite": "^7.3.6"
+  },
+  "build": {
+    "appId": "com.sarathi.app",
+    "productName": "Sarathi",
+    "copyright": "Copyright © 2026 CharanTheAIGuy. Open-source under MIT.",
+    "directories": {
+      "output": "dist-installer"
+    },
+    "files": [
+      "out/**/*"
+    ],
+    "asarUnpack": [
+      "node_modules/@huggingface/transformers/**",
+      "node_modules/onnxruntime-node/**"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "resources/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Sarathi"
+    }
+  }
+}
