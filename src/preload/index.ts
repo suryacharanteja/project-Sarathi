@@ -45,6 +45,10 @@ const api: SarathiApi = {
   uploadDocument: () => ipcRenderer.invoke(IPC_CHANNELS.uploadDocument),
   listDocuments: () => ipcRenderer.invoke(IPC_CHANNELS.listDocuments),
   extractResumeFromFile: () => ipcRenderer.invoke(IPC_CHANNELS.extractResumeFromFile),
+  getDocumentFilePath: () => ipcRenderer.invoke(IPC_CHANNELS.getDocumentFilePath),
+  getDocumentHtml: (filePath: string) => ipcRenderer.invoke(IPC_CHANNELS.getDocumentHtml, filePath),
+  readDocumentBytes: (filePath: string) => ipcRenderer.invoke(IPC_CHANNELS.readDocumentBytes, filePath),
+  importSlideSource: () => ipcRenderer.invoke(IPC_CHANNELS.importSlideSource),
   askAiStart: (request: AskAiRequest) => ipcRenderer.invoke(IPC_CHANNELS.aiAskStart, request),
   checkTurnComplete: (request: CheckTurnCompleteRequest) =>
     ipcRenderer.invoke(IPC_CHANNELS.checkTurnComplete, request),
@@ -78,6 +82,7 @@ const api: SarathiApi = {
   windowRestore: () => ipcRenderer.send(IPC_CHANNELS.windowRestore),
   windowClose: () => ipcRenderer.send(IPC_CHANNELS.windowClose),
   resizeWindow: (bounds: WindowResizeBounds) => ipcRenderer.send(IPC_CHANNELS.windowResize, bounds),
+  setScreenCaptureVisibility: (visible: boolean) => ipcRenderer.send(IPC_CHANNELS.setScreenCaptureVisibility, visible),
 
   screenshotCapture: () => ipcRenderer.invoke(IPC_CHANNELS.screenshotCapture)
 }

@@ -20,6 +20,10 @@ import {
   type SttStartResult,
   type UploadDocumentResult,
   type ExtractResumeResult,
+  type GetDocumentFilePathResult,
+  type GetDocumentHtmlResult,
+  type ReadDocumentBytesResult,
+  type ImportSlideSourceResult,
   type CheckTurnCompleteRequest,
   type CheckTurnCompleteResult,
   type WindowResizeBounds
@@ -45,8 +49,11 @@ import type {
   PracticeAnswerPayload
 } from '../shared/ipc-contract'
 import { createDocument, getDocument, listDocuments } from './documents/store'
-import { extractText, SUPPORTED_DOCUMENT_EXTENSIONS } from './documents/extract-text'
-import { basename } from 'path'
+import { extractText, SUPPORTED_DOCUMENT_EXTENSIONS, UNSUPPORTED_TEXT } from './documents/extract-text'
+import { extractPptxSlides } from './documents/extract-pptx'
+import { basename, extname } from 'path'
+import { readFileSync } from 'fs'
+import mammoth from 'mammoth'
 import { createSttService } from './services/stt/router'
 import type { LocalSttModelStatus } from '../shared/stt-types'
 import { safeSend } from './utils/safe-send'
@@ -78,6 +85,24 @@ function apiKeyForProvider(settings: AppSettings, provider: AskAiRequest['provid
     case 'deepseek':
       return settings.deepseekApiKey
   }
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+// Mammoth's own output never includes scripts, but strip defensively before
+// dangerouslySetInnerHTML anyway — cheap insurance against a maliciously
+// crafted DOCX (raw XML pasted into a text run, etc.) reaching the DOM.
+function sanitizeHtml(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
+    .replace(/\son\w+\s*=\s*"[^"]*"/gi, '')
+    .replace(/\son\w+\s*=\s*'[^']*'/gi, '')
 }
 
 const MINI_SIZE = 64
@@ -113,6 +138,12 @@ export function registerIpcHandlers(window: BrowserWindow): void {
   // edge hit-testing and the OS resize cursor it draws — min/max size
   // constraints set at window-creation time in overlay.ts are still
   // enforced by Electron on setBounds regardless of the resizable flag.
+  ipcMain.on(IPC_CHANNELS.setScreenCaptureVisibility, (_event, visible: boolean) => {
+    if (window.isDestroyed()) return
+    // setContentProtection can be flipped live — no need to recreate the window.
+    window.setContentProtection(!visible)
+  })
+
   ipcMain.on(IPC_CHANNELS.windowResize, (_event, bounds: WindowResizeBounds) => {
     if (window.isDestroyed()) return
     window.setBounds(bounds)
@@ -242,8 +273,106 @@ export function registerIpcHandlers(window: BrowserWindow): void {
     }
     try {
       const filePath = result.filePaths[0]
+      const ext = extname(filePath).toLowerCase().slice(1)
+      // The OS dialog's filter can be bypassed via its own "All Files"
+      // option, so an unsupported type (e.g. .pptx) can still reach here.
+      if (!SUPPORTED_DOCUMENT_EXTENSIONS.includes(ext)) {
+        return { error: `".${ext}" isn't a supported format. Use PDF, DOCX, TXT, or MD.` }
+      }
       const text = await extractText(filePath)
+      if (text === UNSUPPORTED_TEXT) {
+        return { error: 'No extractable text found in this file — it may be a scanned/image-only PDF.' }
+      }
       return { fileName: basename(filePath), text }
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to read the selected file.' }
+    }
+  })
+
+  // For the PDF / Document viewer modes — returns the raw file path (PDF is
+  // rendered client-side by pdfjs-dist) or routes DOCX/TXT to getDocumentHtml.
+  ipcMain.handle(IPC_CHANNELS.getDocumentFilePath, async (): Promise<GetDocumentFilePathResult> => {
+    const result = await dialog.showOpenDialog(window, {
+      properties: ['openFile'],
+      filters: [{ name: 'Documents', extensions: ['pdf', 'docx', 'txt', 'md'] }]
+    })
+    if (result.canceled || result.filePaths.length === 0) {
+      return { cancelled: true }
+    }
+    const filePath = result.filePaths[0]
+    const ext = extname(filePath).toLowerCase()
+    // The OS dialog's filter can be bypassed via its own "All Files" option,
+    // so an unsupported type (e.g. .pptx) can still reach here.
+    if (!SUPPORTED_DOCUMENT_EXTENSIONS.includes(ext.slice(1))) {
+      return { error: `".${ext.slice(1)}" isn't a supported format. Use PDF, DOCX, TXT, or MD.` }
+    }
+    const kind = ext === '.pdf' ? 'pdf' : 'document'
+    const text = await extractText(filePath)
+    // A PDF still renders visually via its own page-canvas viewer even with
+    // no extractable text (e.g. a scanned document) — only reject when the
+    // format has no other way to show anything at all.
+    if (kind === 'document' && text === UNSUPPORTED_TEXT) {
+      return { error: 'No extractable text found in this file.' }
+    }
+    return { filePath, fileName: basename(filePath), kind, text }
+  })
+
+  ipcMain.handle(
+    IPC_CHANNELS.getDocumentHtml,
+    async (_event, filePath: string): Promise<GetDocumentHtmlResult> => {
+      try {
+        const ext = extname(filePath).toLowerCase()
+        if (ext === '.docx') {
+          const result = await mammoth.convertToHtml({ path: filePath })
+          return { html: sanitizeHtml(result.value) }
+        }
+        const text = readFileSync(filePath, 'utf-8')
+        return { html: `<pre>${escapeHtml(text)}</pre>` }
+      } catch (error) {
+        return { error: error instanceof Error ? error.message : 'Failed to read the selected file.' }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    IPC_CHANNELS.readDocumentBytes,
+    (_event, filePath: string): ReadDocumentBytesResult => {
+      try {
+        return { data: new Uint8Array(readFileSync(filePath)) }
+      } catch (error) {
+        return { error: error instanceof Error ? error.message : 'Failed to read the selected file.' }
+      }
+    }
+  )
+
+  ipcMain.handle(IPC_CHANNELS.importSlideSource, async (): Promise<ImportSlideSourceResult> => {
+    const result = await dialog.showOpenDialog(window, {
+      properties: ['openFile'],
+      filters: [{ name: 'Documents', extensions: [...SUPPORTED_DOCUMENT_EXTENSIONS, 'pptx'] }]
+    })
+    if (result.canceled || result.filePaths.length === 0) {
+      return { cancelled: true }
+    }
+    const filePath = result.filePaths[0]
+    const fileName = basename(filePath)
+    const ext = extname(filePath).toLowerCase()
+    try {
+      if (ext === '.pptx') {
+        const slides = await extractPptxSlides(filePath)
+        if (slides.length === 0) {
+          return { error: 'No slides with content found in this presentation.' }
+        }
+        return { slides, fileName }
+      }
+      // Same "All Files" dialog-bypass concern as the other document pickers.
+      if (!SUPPORTED_DOCUMENT_EXTENSIONS.includes(ext.slice(1))) {
+        return { error: `".${ext.slice(1)}" isn't a supported format. Use PPTX, PDF, DOCX, TXT, or MD.` }
+      }
+      const text = await extractText(filePath)
+      if (text === UNSUPPORTED_TEXT) {
+        return { error: 'No extractable text found in this file.' }
+      }
+      return { text, fileName }
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Failed to read the selected file.' }
     }

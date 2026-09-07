@@ -1,5 +1,29 @@
 @import 'tailwindcss';
 
+/* Design tokens — see docs/FRD.md FR-10. Dark values are the overlay theme;
+   the setup screen (light glass) overrides the subset it uses via
+   [data-theme="light"] on its root container. */
+:root {
+  --bg-base: #0a0a0f;
+  --bg-surface: #13131a;
+  --bg-edge: rgba(255, 255, 255, 0.06);
+  --accent: #6366f1;
+  --accent-dim: #4f46e5;
+  --positive: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --text-hi: #f5f5f5;
+  --text-mid: #a3a3a3;
+  --text-lo: #525252;
+}
+
+[data-theme='light'] {
+  --bg-base: rgba(255, 255, 255, 0.92);
+  --bg-surface: rgba(255, 255, 255, 0.7);
+  --accent: #6366f1;
+  --text-hi: #111827;
+}
+
 /*
  * Stealth requirement: the OS mouse cursor is composited by Windows
  * separately from any app's window content during screen capture, so a

@@ -33,6 +33,10 @@ export const IPC_CHANNELS = {
   uploadDocument: 'document:upload',
   listDocuments: 'document:list',
   extractResumeFromFile: 'resume:extractFromFile',
+  getDocumentFilePath: 'document:getFilePath',
+  getDocumentHtml: 'document:getHtml',
+  readDocumentBytes: 'document:readBytes',
+  importSlideSource: 'slides:importSource',
   aiAskStart: 'ai:askStart',
   checkTurnComplete: 'ai:checkTurnComplete',
   aiChunk: 'ai:chunk',
@@ -54,7 +58,8 @@ export const IPC_CHANNELS = {
   windowRestore: 'window:restore',
   windowClose: 'window:close',
   windowResize: 'window:resize',
-  screenshotCapture: 'screenshot:capture'
+  screenshotCapture: 'screenshot:capture',
+  setScreenCaptureVisibility: 'window:setScreenCaptureVisibility'
 } as const
 
 export const SHORTCUT_IDS = [
@@ -205,6 +210,52 @@ export interface ExtractResumeResult {
   error?: string
 }
 
+export interface GetDocumentFilePathResult {
+  filePath?: string
+  fileName?: string
+  /** Which viewer this file should be routed to — `pdf` for a .pdf file,
+   *  `document` for .docx/.txt/.md — so the caller doesn't need to re-parse
+   *  the extension itself. */
+  kind?: 'pdf' | 'document'
+  /** Plain-text extraction (same extractText() used elsewhere), returned
+   *  alongside the path so the setup screen can mirror it into scriptText
+   *  (word count, teleprompter fallback) without a second file dialog. */
+  text?: string
+  cancelled?: boolean
+  error?: string
+}
+
+export interface GetDocumentHtmlResult {
+  html?: string
+  error?: string
+}
+
+/** Raw file bytes for a PDF already picked via getDocumentFilePath — the
+ *  renderer can't read the filesystem itself, and pdfjs-dist needs the raw
+ *  bytes (not a file:// URL, which the CSP/origin model blocks fetching
+ *  from the dev-server-hosted renderer). */
+export interface ReadDocumentBytesResult {
+  data?: Uint8Array
+  error?: string
+}
+
+export interface ImportedSlide {
+  title: string
+  body: string
+}
+
+/** Used by the Slide Builder's "Import from file". A .pptx source returns
+ *  real slide-by-slide structure via `slides`; a flat-text source (PDF/
+ *  DOCX/TXT/MD, same as before) returns `text` for the renderer's existing
+ *  heading-based parser to split into slides. */
+export interface ImportSlideSourceResult {
+  slides?: ImportedSlide[]
+  text?: string
+  fileName?: string
+  cancelled?: boolean
+  error?: string
+}
+
 export interface ScreenshotCaptureResult {
   dataUrl?: string
   error?: string
@@ -280,6 +331,10 @@ export interface SarathiApi {
   uploadDocument: () => Promise<UploadDocumentResult>
   listDocuments: () => Promise<DocumentRecord[]>
   extractResumeFromFile: () => Promise<ExtractResumeResult>
+  getDocumentFilePath: () => Promise<GetDocumentFilePathResult>
+  getDocumentHtml: (filePath: string) => Promise<GetDocumentHtmlResult>
+  readDocumentBytes: (filePath: string) => Promise<ReadDocumentBytesResult>
+  importSlideSource: () => Promise<ImportSlideSourceResult>
   askAiStart: (request: AskAiRequest) => Promise<AskAiStartResult>
   checkTurnComplete: (request: CheckTurnCompleteRequest) => Promise<CheckTurnCompleteResult>
   onAiChunk: (callback: (event: AskAiChunkEvent) => void) => () => void
@@ -305,6 +360,10 @@ export interface SarathiApi {
   windowRestore: () => void
   windowClose: () => void
   resizeWindow: (bounds: WindowResizeBounds) => void
+  /** false = window is excluded from screenshots/screen-share capture
+   *  (default, "stealth"); true = visible to capture, e.g. so a webinar
+   *  host can reveal the overlay to their shared screen when they want to. */
+  setScreenCaptureVisibility: (visible: boolean) => void
 
   screenshotCapture: () => Promise<ScreenshotCaptureResult>
 }

@@ -3,7 +3,7 @@ import { extname } from 'path'
 import { PDFParse } from 'pdf-parse'
 import mammoth from 'mammoth'
 
-const UNSUPPORTED_TEXT = '[Text could not be extracted from this file.]'
+export const UNSUPPORTED_TEXT = '[Text could not be extracted from this file.]'
 
 export async function extractText(filePath: string): Promise<string> {
   const ext = extname(filePath).toLowerCase()

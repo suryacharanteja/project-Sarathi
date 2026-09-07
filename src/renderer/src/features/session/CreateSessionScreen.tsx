@@ -1,9 +1,11 @@
-import { useRef, useState, useCallback, useEffect } from 'react'
+import { useRef, useState, useCallback, useEffect, useMemo } from 'react'
 import { FileText, Settings, FlipHorizontal, Play, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import type { LlmProvider } from '@shared/session-types'
 import { useSessionStore } from '../../stores/session-store'
 import { usePrompterStore } from '../prompter/prompter-store'
+import { useSetupStore, PERSONAS, type Persona } from '../../stores/setup-store'
+import { SlideBuilder } from '../slides/SlideBuilder'
 import { Toggle } from '../../components/ui/toggle'
 import { Dropdown } from '../../components/ui/dropdown'
 import { SettingsModal } from '../settings/SettingsModal'
@@ -36,6 +38,13 @@ const API_KEY_FOR_PROVIDER: Record<LlmProvider, string> = {
   deepseek: 'deepseekApiKey'
 }
 
+const PERSONA_META: Record<Persona, { label: string; icon: string }> = {
+  'webinar-host': { label: 'Webinar Host', icon: '🎙' },
+  teacher: { label: 'Teacher', icon: '🎓' },
+  speaker: { label: 'Speaker', icon: '📄' },
+  meeting: { label: 'Meeting', icon: '💼' }
+}
+
 export function CreateSessionScreen({
   onCreate,
   onMinimize
@@ -44,6 +53,7 @@ export function CreateSessionScreen({
   onMinimize?: () => void
 }): React.JSX.Element {
   const { form, setField } = useSessionStore()
+  const { activePersona, setActivePersona } = useSetupStore()
   const {
     scriptText,
     scriptFileName,
@@ -51,11 +61,18 @@ export function CreateSessionScreen({
     fontSize,
     mirrorFlip,
     aiListenerEnabled,
+    contentMode,
+    slides,
+    pdfFilePath,
+    docHtml,
     setScriptText,
     setScrollSpeed,
     setFontSize,
     setMirrorFlip,
-    setAiListenerEnabled
+    setAiListenerEnabled,
+    setContentMode,
+    setPdfFilePath,
+    setDocHtml
   } = usePrompterStore()
 
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -71,22 +88,61 @@ export function CreateSessionScreen({
     })
   }, [form.provider])
 
+  // Each persona has a default content mode. Speaker is the exception —
+  // its mode is set when a file is picked (FR-02) — but switching away and
+  // back (e.g. peeking at Teacher) must restore that mode rather than leave
+  // it stuck on whatever the other tab set, or Start Presenting silently
+  // fails "Please add content" against the wrong mode's content check.
+  useEffect(() => {
+    if (activePersona === 'webinar-host' || activePersona === 'teacher') {
+      setContentMode('carousel')
+    } else if (activePersona === 'meeting') {
+      setContentMode('teleprompter')
+    } else if (activePersona === 'speaker') {
+      if (pdfFilePath) setContentMode('pdf')
+      else if (docHtml) setContentMode('document')
+    }
+  }, [activePersona, setContentMode, pdfFilePath, docHtml])
+
+  // Mirror slide content into scriptText so the existing teleprompter
+  // overlay can still display something until SlideCarouselPanel (a later
+  // phase) reads `slides` directly.
+  useEffect(() => {
+    if (activePersona !== 'webinar-host' && activePersona !== 'teacher') return
+    const combined = slides.map((s) => `${s.title}\n\n${s.body}`).join('\n\n———\n\n')
+    setScriptText(combined)
+  }, [slides, activePersona, setScriptText])
+
   function handleProviderChange(provider: LlmProvider): void {
     setField('provider', provider)
     setField('model', PROVIDER_MODELS[provider][0].value)
   }
 
-  async function handleBrowse(): Promise<void> {
+  async function handleSpeakerBrowse(): Promise<void> {
     setLoading(true)
     try {
-      const result = await window.sarathi.extractResumeFromFile()
-      if (result.cancelled) return
-      if (result.error || !result.text) {
-        toast.error(result.error ?? 'Could not extract text from file.')
+      const picked = await window.sarathi.getDocumentFilePath()
+      if (picked.cancelled) return
+      if (picked.error || !picked.filePath) {
+        toast.error(picked.error ?? 'Could not open the selected file.')
         return
       }
-      setScriptText(result.text.trim(), result.fileName)
-      toast.success(`Loaded: ${result.fileName}`)
+      if (picked.kind === 'pdf') {
+        setContentMode('pdf')
+        setPdfFilePath(picked.filePath)
+        setDocHtml(null)
+      } else {
+        setContentMode('document')
+        setPdfFilePath(null)
+        const htmlResult = await window.sarathi.getDocumentHtml(picked.filePath)
+        if (htmlResult.error) {
+          toast.error(htmlResult.error)
+          return
+        }
+        setDocHtml(htmlResult.html ?? null)
+      }
+      setScriptText((picked.text ?? '').trim(), picked.fileName)
+      toast.success(`Loaded: ${picked.fileName}`)
     } finally {
       setLoading(false)
     }
@@ -100,20 +156,43 @@ export function CreateSessionScreen({
     const ext = file.name.split('.').pop()?.toLowerCase()
     if (ext === 'txt') {
       setLoading(true)
-      file.text().then((text) => {
-        if (!text.trim()) { toast.error('File appears empty.'); return }
-        setScriptText(text.trim(), file.name)
-        toast.success(`Loaded: ${file.name}`)
-      }).catch(() => toast.error('Failed to read file.')).finally(() => setLoading(false))
+      file
+        .text()
+        .then((text) => {
+          if (!text.trim()) {
+            toast.error('File appears empty.')
+            return
+          }
+          setContentMode('document')
+          setPdfFilePath(null)
+          setDocHtml(null)
+          setScriptText(text.trim(), file.name)
+          toast.success(`Loaded: ${file.name}`)
+        })
+        .catch(() => toast.error('Failed to read file.'))
+        .finally(() => setLoading(false))
     } else {
       // PDF/DOCX need the main-process parsers — open file picker instead
       toast.info('For PDF/DOCX, use the Browse button — drag-and-drop only works with .txt files.')
     }
   }, [])
 
+  const wordCount = useMemo(() => {
+    const text = scriptText.trim()
+    return text ? text.split(/\s+/).filter(Boolean).length : 0
+  }, [scriptText])
+  const readingMinutes = Math.max(1, Math.round(wordCount / 130))
+
+  function hasContent(): boolean {
+    if (contentMode === 'carousel') return slides.length > 0
+    if (contentMode === 'pdf') return !!pdfFilePath
+    if (contentMode === 'document') return !!docHtml || !!scriptText.trim()
+    return !!scriptText.trim()
+  }
+
   function handleStart(): void {
-    if (!scriptText.trim()) {
-      toast.error('Please load a script before starting.')
+    if (!hasContent()) {
+      toast.error('Please add content before starting.')
       return
     }
     if (aiListenerEnabled && !hasApiKey) {
@@ -143,7 +222,10 @@ export function CreateSessionScreen({
   }
 
   return (
-    <div className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-black/10 bg-white/95 text-neutral-900 shadow-2xl backdrop-blur-xl">
+    <div
+      data-theme="light"
+      className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-black/10 bg-[var(--bg-base)] text-neutral-900 shadow-2xl backdrop-blur-xl"
+    >
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
 
       <TitleBar
@@ -181,43 +263,95 @@ export function CreateSessionScreen({
           <p className="text-sm text-neutral-500">Your AI-powered presentation co-pilot</p>
         </div>
 
-        {/* Script loader */}
-        <div>
-          <p className="text-xs font-medium text-neutral-500 mb-2 uppercase tracking-wide">Script</p>
+        {/* Persona tabs */}
+        <div className="relative grid grid-cols-4 rounded-xl bg-black/[0.04] p-1">
           <div
-            ref={dropRef}
-            onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={onDrop}
-            className={`relative flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 text-center transition ${
-              dragging ? 'border-indigo-400 bg-indigo-50' : 'border-black/10 bg-black/[0.02]'
-            }`}
-          >
-            {scriptText ? (
-              <>
-                <FileText size={22} className="text-indigo-500" />
-                <p className="text-sm font-medium text-neutral-700">{scriptFileName ?? 'Script loaded'}</p>
-                <p className="text-xs text-neutral-400">{scriptText.length.toLocaleString()} characters</p>
-                <button onClick={handleBrowse} className="text-xs text-indigo-500 hover:underline">
-                  Replace script
-                </button>
-              </>
-            ) : (
-              <>
-                <Upload size={22} className="text-neutral-400" />
-                <p className="text-sm text-neutral-500">
-                  {loading ? 'Loading…' : 'Drop a .txt file here, or browse for PDF/DOCX'}
-                </p>
-                <button
-                  onClick={handleBrowse}
-                  disabled={loading}
-                  className="mt-1 rounded-lg border border-black/10 bg-white px-3 py-1.5 text-sm text-neutral-700 hover:bg-black/[0.04] disabled:opacity-50"
-                >
-                  Browse…
-                </button>
-              </>
-            )}
-          </div>
+            className="absolute inset-y-1 w-1/4 rounded-lg bg-indigo-600 transition-transform duration-200 ease-out"
+            style={{ transform: `translateX(${PERSONAS.indexOf(activePersona) * 100}%)` }}
+          />
+          {PERSONAS.map((persona) => (
+            <button
+              key={persona}
+              onClick={() => setActivePersona(persona)}
+              className={`relative z-10 flex items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium transition-colors duration-150 ${
+                activePersona === persona ? 'text-white' : 'text-neutral-500 hover:text-neutral-800'
+              }`}
+            >
+              <span>{PERSONA_META[persona].icon}</span>
+              <span className="hidden sm:inline">{PERSONA_META[persona].label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Content panel — varies by persona */}
+        <div key={activePersona} className="panel-fade-in">
+          <style>{`
+            @keyframes panelFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+            .panel-fade-in { animation: panelFadeIn 150ms ease-out; }
+          `}</style>
+          <p className="text-xs font-medium text-neutral-500 mb-2 uppercase tracking-wide">
+            {activePersona === 'speaker' ? 'Document' : activePersona === 'meeting' ? 'Notes' : 'Slides'}
+          </p>
+
+          {(activePersona === 'webinar-host' || activePersona === 'teacher') && <SlideBuilder />}
+
+          {activePersona === 'meeting' && (
+            <textarea
+              value={scriptText}
+              onChange={(e) => setScriptText(e.target.value)}
+              placeholder="Type or paste your notes here…"
+              rows={6}
+              className="w-full resize-none rounded-xl border border-black/10 bg-black/[0.02] p-3 text-sm text-neutral-700 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            />
+          )}
+
+          {activePersona === 'speaker' && (
+            <div
+              ref={dropRef}
+              onDragOver={(e) => {
+                e.preventDefault()
+                setDragging(true)
+              }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={onDrop}
+              className={`relative flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 text-center transition ${
+                dragging ? 'border-indigo-400 bg-indigo-50' : 'border-black/10 bg-black/[0.02]'
+              }`}
+            >
+              {pdfFilePath || docHtml ? (
+                <>
+                  <FileText size={22} className="text-indigo-500" />
+                  <p className="text-sm font-medium text-neutral-700">{scriptFileName ?? 'Document loaded'}</p>
+                  <p className="text-xs text-neutral-400">
+                    {pdfFilePath ? 'PDF' : 'Document'} loaded
+                  </p>
+                  <button onClick={handleSpeakerBrowse} className="text-xs text-indigo-500 hover:underline">
+                    Replace document
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Upload size={22} className="text-neutral-400" />
+                  <p className="text-sm text-neutral-500">
+                    {loading ? 'Loading…' : 'Drop a .txt file here, or browse for PDF/DOCX'}
+                  </p>
+                  <button
+                    onClick={handleSpeakerBrowse}
+                    disabled={loading}
+                    className="mt-1 rounded-lg border border-black/10 bg-white px-3 py-1.5 text-sm text-neutral-700 hover:bg-black/[0.04] disabled:opacity-50"
+                  >
+                    Browse…
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
+          {wordCount > 0 && (
+            <p className="mt-2 text-xs text-neutral-400">
+              {wordCount.toLocaleString()} words · ~{readingMinutes} min reading time at normal pace
+            </p>
+          )}
         </div>
 
         {/* Prompter settings */}
