@@ -7,6 +7,15 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
 
 const MIN_SCALE = 0.5
 const MAX_SCALE = 2.0
+const PREFETCH_RADIUS = 1
+
+function snapshotCanvas(source: HTMLCanvasElement): HTMLCanvasElement {
+  const copy = document.createElement('canvas')
+  copy.width = source.width
+  copy.height = source.height
+  copy.getContext('2d')?.drawImage(source, 0, 0)
+  return copy
+}
 
 export function PdfViewerPanel({
   filePath,
@@ -23,6 +32,10 @@ export function PdfViewerPanel({
   const [error, setError] = useState<string | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const renderTaskRef = useRef<{ cancel: () => void } | null>(null)
+  // Pre-rendered neighbor pages, keyed "page" (cache is scale-specific —
+  // cleared whenever scale changes) — lets paging feel instant instead of
+  // re-running pdfjs's render pipeline on every navigation.
+  const pageCacheRef = useRef<Map<number, HTMLCanvasElement>>(new Map())
 
   // Load the document whenever a new file is picked
   useEffect(() => {
@@ -30,6 +43,7 @@ export function PdfViewerPanel({
     setDoc(null)
     setError(null)
     setPageNum(1)
+    pageCacheRef.current.clear()
     window.sarathi.readDocumentBytes(filePath).then((result) => {
       if (cancelled) return
       if (result.error || !result.data) {
@@ -57,31 +71,81 @@ export function PdfViewerPanel({
     if (totalPages > 0) onProgress?.(pageNum, totalPages)
   }, [pageNum, totalPages, onProgress])
 
-  // Render the current page — lazy, on demand, only the page in view
+  // Scale changes invalidate every cached bitmap (they're rendered at a
+  // fixed resolution) — drop them all rather than let stale entries linger.
+  useEffect(() => {
+    pageCacheRef.current.clear()
+  }, [scale])
+
+  // Show the current page — instantly from the prefetch cache when
+  // available, otherwise render it directly (identical to before).
   useEffect(() => {
     if (!doc) return
     let cancelled = false
-    doc.getPage(pageNum).then(async (page) => {
-      if (cancelled) return
-      const canvas = canvasRef.current
-      const context = canvas?.getContext('2d')
-      if (!canvas || !context) return
-      const viewport = page.getViewport({ scale })
-      canvas.width = viewport.width
-      canvas.height = viewport.height
-      renderTaskRef.current?.cancel()
-      const task = page.render({ canvasContext: context, viewport, canvas })
-      renderTaskRef.current = task
-      try {
-        await task.promise
-      } catch {
-        // Superseded by a newer render (page/scale changed mid-flight) — ignore
+    const canvas = canvasRef.current
+    const context = canvas?.getContext('2d')
+    if (!canvas || !context) return
+
+    const cached = pageCacheRef.current.get(pageNum)
+    if (cached) {
+      canvas.width = cached.width
+      canvas.height = cached.height
+      context.drawImage(cached, 0, 0)
+    } else {
+      doc.getPage(pageNum).then(async (page) => {
+        if (cancelled) return
+        const viewport = page.getViewport({ scale })
+        canvas.width = viewport.width
+        canvas.height = viewport.height
+        renderTaskRef.current?.cancel()
+        const task = page.render({ canvasContext: context, viewport, canvas })
+        renderTaskRef.current = task
+        try {
+          await task.promise
+        } catch {
+          // Superseded by a newer render (page/scale changed mid-flight) — ignore
+          return
+        }
+        if (cancelled) return
+        pageCacheRef.current.set(pageNum, snapshotCanvas(canvas))
+      })
+    }
+
+    // Pre-render current ± PREFETCH_RADIUS in the background — not drawn,
+    // just warmed for the next navigation.
+    ;(async () => {
+      for (let offset = 1; offset <= PREFETCH_RADIUS; offset++) {
+        for (const neighbor of [pageNum - offset, pageNum + offset]) {
+          if (cancelled) return
+          if (neighbor < 1 || neighbor > totalPages || pageCacheRef.current.has(neighbor)) continue
+          try {
+            const page = await doc.getPage(neighbor)
+            if (cancelled) return
+            const viewport = page.getViewport({ scale })
+            const off = document.createElement('canvas')
+            off.width = viewport.width
+            off.height = viewport.height
+            const offContext = off.getContext('2d')
+            if (!offContext) continue
+            await page.render({ canvasContext: offContext, viewport, canvas: off }).promise
+            if (cancelled) continue
+            pageCacheRef.current.set(neighbor, off)
+          } catch {
+            // Non-critical — a failed prefetch just means that page renders
+            // normally, on demand, when the user actually navigates to it.
+          }
+        }
       }
-    })
+      // Bound memory: drop anything outside the current window.
+      for (const cachedPage of pageCacheRef.current.keys()) {
+        if (Math.abs(cachedPage - pageNum) > PREFETCH_RADIUS) pageCacheRef.current.delete(cachedPage)
+      }
+    })()
+
     return () => {
       cancelled = true
     }
-  }, [doc, pageNum, scale])
+  }, [doc, pageNum, scale, totalPages])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent): void {

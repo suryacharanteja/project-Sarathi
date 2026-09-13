@@ -11,10 +11,21 @@ function parseXml(xml: string): Document {
   return new DOMParser({ errorHandler: { warning: () => {}, error: () => {} } }).parseFromString(xml, 'text/xml')
 }
 
-/** Concatenates every <a:t> run's text within an element, in document order. */
-function textOf(el: Element): string {
-  const runs = Array.from(el.getElementsByTagName('a:t'))
-  return runs.map((r) => r.textContent ?? '').join('')
+/** Concatenates a paragraph's runs in order, wrapping bold runs in `**` —
+ *  the same lightweight convention MarkdownLite already renders elsewhere
+ *  in the app — so a slide's own bold emphasis survives the import instead
+ *  of collapsing to flat, unformatted text. */
+function textOf(paragraph: Element): string {
+  const runs = Array.from(paragraph.getElementsByTagName('a:r'))
+  return runs
+    .map((run) => {
+      const text = Array.from(run.getElementsByTagName('a:t'))
+        .map((t) => t.textContent ?? '')
+        .join('')
+      const isBold = run.getElementsByTagName('a:rPr')[0]?.getAttribute('b') === '1'
+      return isBold && text.length > 0 ? `**${text}**` : text
+    })
+    .join('')
 }
 
 /** One line per <a:p> paragraph, blank paragraphs dropped. */

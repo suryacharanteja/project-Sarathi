@@ -38,6 +38,7 @@ export function OverlayHUD({
     slides,
     currentSlideIndex,
     bookmarks,
+    lessonDurationMinutes,
     setScrollSpeed,
     setFontSize,
     addBookmark
@@ -214,7 +215,13 @@ export function OverlayHUD({
   const pauseIndicator = usesTeleprompterScroll ? (paused ? '⏸ paused' : '▶ scrolling') : null
 
   return (
-    <div className="flex h-full w-full overflow-hidden rounded-2xl border border-white/10 bg-[var(--bg-base)] text-neutral-100 shadow-2xl backdrop-blur-xl">
+    <div
+      className="elevation-0 flex h-full w-full overflow-hidden rounded-2xl border border-white/10 text-neutral-100 shadow-2xl"
+      // Inline, not the backdrop-blur-xl Tailwind class — see the
+      // .elevation-3 comment in index.css; the bug affects any
+      // backdrop-filter utility, not just this component's own class.
+      style={{ backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
+    >
 
       {/* Teleprompter panel */}
       <div className="relative flex flex-col flex-1 min-w-0 border-r border-white/10">
@@ -226,6 +233,7 @@ export function OverlayHUD({
           progress={progress}
           counterText={counterText}
           pauseIndicator={pauseIndicator}
+          lessonDurationMinutes={lessonDurationMinutes}
         />
 
         {isCarousel ? (

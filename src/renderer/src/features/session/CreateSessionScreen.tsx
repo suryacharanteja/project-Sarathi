@@ -65,6 +65,7 @@ export function CreateSessionScreen({
     slides,
     pdfFilePath,
     docHtml,
+    lessonDurationMinutes,
     setScriptText,
     setScrollSpeed,
     setFontSize,
@@ -72,7 +73,8 @@ export function CreateSessionScreen({
     setAiListenerEnabled,
     setContentMode,
     setPdfFilePath,
-    setDocHtml
+    setDocHtml,
+    setLessonDurationMinutes
   } = usePrompterStore()
 
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -224,7 +226,10 @@ export function CreateSessionScreen({
   return (
     <div
       data-theme="light"
-      className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-black/10 bg-[var(--bg-base)] text-neutral-900 shadow-2xl backdrop-blur-xl"
+      className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-black/10 bg-[var(--bg-base)] text-neutral-900 shadow-2xl"
+      // Inline, not the backdrop-blur-xl Tailwind class — see the
+      // .elevation-3 comment in index.css.
+      style={{ backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
     >
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
 
@@ -234,7 +239,7 @@ export function CreateSessionScreen({
       >
         <button
           onClick={() => setSettingsOpen(true)}
-          className="rounded-full p-1.5 text-neutral-500 transition hover:bg-black/5 hover:text-neutral-900"
+          className="rounded-full p-1.5 text-neutral-500 transition hover:bg-black/5 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
           title="Settings"
         >
           <Settings size={16} />
@@ -273,7 +278,7 @@ export function CreateSessionScreen({
             <button
               key={persona}
               onClick={() => setActivePersona(persona)}
-              className={`relative z-10 flex items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium transition-colors duration-150 ${
+              className={`relative z-10 flex items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40 ${
                 activePersona === persona ? 'text-white' : 'text-neutral-500 hover:text-neutral-800'
               }`}
             >
@@ -295,13 +300,40 @@ export function CreateSessionScreen({
 
           {(activePersona === 'webinar-host' || activePersona === 'teacher') && <SlideBuilder />}
 
+          {activePersona === 'teacher' && (
+            <div className="mt-3 rounded-lg border border-black/10 bg-black/[0.02] p-3">
+              <Toggle
+                checked={lessonDurationMinutes !== null}
+                onChange={(checked) => setLessonDurationMinutes(checked ? 45 : null)}
+                label="Lesson timer"
+                hint="Counts down in the overlay instead of just counting up, so you can see class-period time remaining at a glance"
+              />
+              {lessonDurationMinutes !== null && (
+                <div className="mt-2 flex items-center gap-3 pl-6">
+                  <input
+                    type="range"
+                    min={5}
+                    max={180}
+                    step={5}
+                    value={lessonDurationMinutes}
+                    onChange={(e) => setLessonDurationMinutes(Number(e.target.value))}
+                    className="flex-1 accent-indigo-500"
+                  />
+                  <span className="w-16 shrink-0 text-right text-xs text-neutral-500">
+                    {lessonDurationMinutes} min
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
           {activePersona === 'meeting' && (
             <textarea
               value={scriptText}
               onChange={(e) => setScriptText(e.target.value)}
               placeholder="Type or paste your notes here…"
               rows={6}
-              className="w-full resize-none rounded-xl border border-black/10 bg-black/[0.02] p-3 text-sm text-neutral-700 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              className="w-full resize-none rounded-xl border border-black/10 bg-black/[0.02] p-3 font-mono text-sm text-neutral-700 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
             />
           )}
 
@@ -325,7 +357,7 @@ export function CreateSessionScreen({
                   <p className="text-xs text-neutral-400">
                     {pdfFilePath ? 'PDF' : 'Document'} loaded
                   </p>
-                  <button onClick={handleSpeakerBrowse} className="text-xs text-indigo-500 hover:underline">
+                  <button onClick={handleSpeakerBrowse} className="rounded text-xs text-indigo-500 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40">
                     Replace document
                   </button>
                 </>
@@ -338,7 +370,7 @@ export function CreateSessionScreen({
                   <button
                     onClick={handleSpeakerBrowse}
                     disabled={loading}
-                    className="mt-1 rounded-lg border border-black/10 bg-white px-3 py-1.5 text-sm text-neutral-700 hover:bg-black/[0.04] disabled:opacity-50"
+                    className="mt-1 rounded-lg border border-black/10 bg-white px-3 py-1.5 text-sm text-neutral-700 transition hover:bg-black/[0.04] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
                   >
                     Browse…
                   </button>
@@ -380,7 +412,7 @@ export function CreateSessionScreen({
             </div>
             <button
               onClick={() => setMirrorFlip(!mirrorFlip)}
-              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition ${
+              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40 ${
                 mirrorFlip
                   ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
                   : 'border-black/10 bg-black/[0.02] text-neutral-600'
@@ -422,7 +454,7 @@ export function CreateSessionScreen({
             {aiListenerEnabled && !hasApiKey && (
               <p className="text-xs text-amber-600">
                 No API key set for {PROVIDER_LABELS[form.provider]}.{' '}
-                <button onClick={() => setSettingsOpen(true)} className="underline">
+                <button onClick={() => setSettingsOpen(true)} className="rounded underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40">
                   Add one in Settings
                 </button>
                 .
@@ -435,7 +467,7 @@ export function CreateSessionScreen({
       <div className="border-t border-black/10 p-3">
         <button
           onClick={handleStart}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-700"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--accent)]/50"
         >
           <Play size={15} />
           Start Presenting

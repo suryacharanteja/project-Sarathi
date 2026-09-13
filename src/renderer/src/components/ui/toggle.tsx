@@ -16,7 +16,7 @@ export function Toggle({
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className="flex items-center gap-2 text-sm text-neutral-700"
+      className="flex items-center gap-2 rounded text-sm text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
     >
       <span
         className={`flex h-4 w-4 items-center justify-center rounded border transition ${

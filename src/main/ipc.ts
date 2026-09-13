@@ -24,6 +24,7 @@ import {
   type GetDocumentHtmlResult,
   type ReadDocumentBytesResult,
   type ImportSlideSourceResult,
+  type ExportSlidesResult,
   type CheckTurnCompleteRequest,
   type CheckTurnCompleteResult,
   type WindowResizeBounds
@@ -49,10 +50,16 @@ import type {
   PracticeAnswerPayload
 } from '../shared/ipc-contract'
 import { createDocument, getDocument, listDocuments } from './documents/store'
-import { extractText, SUPPORTED_DOCUMENT_EXTENSIONS, UNSUPPORTED_TEXT } from './documents/extract-text'
+import {
+  extractText,
+  extractDocxAsFormattedText,
+  SUPPORTED_DOCUMENT_EXTENSIONS,
+  UNSUPPORTED_TEXT
+} from './documents/extract-text'
 import { extractPptxSlides } from './documents/extract-pptx'
+import { convertToPdf } from './documents/convert-to-pdf'
 import { basename, extname } from 'path'
-import { readFileSync } from 'fs'
+import { readFileSync, writeFileSync } from 'fs'
 import mammoth from 'mammoth'
 import { createSttService } from './services/stt/router'
 import type { LocalSttModelStatus } from '../shared/stt-types'
@@ -294,17 +301,43 @@ export function registerIpcHandlers(window: BrowserWindow): void {
   ipcMain.handle(IPC_CHANNELS.getDocumentFilePath, async (): Promise<GetDocumentFilePathResult> => {
     const result = await dialog.showOpenDialog(window, {
       properties: ['openFile'],
-      filters: [{ name: 'Documents', extensions: ['pdf', 'docx', 'txt', 'md'] }]
+      filters: [{ name: 'Documents', extensions: ['pdf', 'docx', 'pptx', 'txt', 'md'] }]
     })
     if (result.canceled || result.filePaths.length === 0) {
       return { cancelled: true }
     }
     const filePath = result.filePaths[0]
+    const fileName = basename(filePath)
     const ext = extname(filePath).toLowerCase()
+
+    // PPTX/DOCX: show the file exactly as it looks (not a text
+    // reconstruction) by converting to PDF via LibreOffice first, then
+    // reusing the same pixel-exact PdfViewerPanel a real PDF already gets.
+    if (ext === '.pptx' || ext === '.docx') {
+      const converted = await convertToPdf(filePath)
+      if (converted.pdfPath) {
+        // Word count / AI context still reads the ORIGINAL file's text —
+        // best-effort only, never blocks the exact-visual result above.
+        const text =
+          ext === '.pptx'
+            ? (await extractPptxSlides(filePath)).map((s) => `${s.title}\n${s.body}`).join('\n\n')
+            : await extractDocxAsFormattedText(filePath).catch(() => undefined)
+        return { filePath: converted.pdfPath, fileName, kind: 'pdf', text }
+      }
+      if (ext === '.pptx') {
+        // No text-based fallback exists for PPTX in this viewer — Speaker
+        // mode has never supported a reconstructed-text view of a deck.
+        return { error: converted.error }
+      }
+      // DOCX still has a real fallback: the existing formatted-text/HTML
+      // path, unaffected by LibreOffice being unavailable.
+    }
+
     // The OS dialog's filter can be bypassed via its own "All Files" option,
-    // so an unsupported type (e.g. .pptx) can still reach here.
+    // so an unsupported type (e.g. an unconvertible .pptx above) can still
+    // reach here.
     if (!SUPPORTED_DOCUMENT_EXTENSIONS.includes(ext.slice(1))) {
-      return { error: `".${ext.slice(1)}" isn't a supported format. Use PDF, DOCX, TXT, or MD.` }
+      return { error: `".${ext.slice(1)}" isn't a supported format. Use PDF, DOCX, PPTX, TXT, or MD.` }
     }
     const kind = ext === '.pdf' ? 'pdf' : 'document'
     const text = await extractText(filePath)
@@ -314,7 +347,7 @@ export function registerIpcHandlers(window: BrowserWindow): void {
     if (kind === 'document' && text === UNSUPPORTED_TEXT) {
       return { error: 'No extractable text found in this file.' }
     }
-    return { filePath, fileName: basename(filePath), kind, text }
+    return { filePath, fileName, kind, text }
   })
 
   ipcMain.handle(
@@ -368,7 +401,10 @@ export function registerIpcHandlers(window: BrowserWindow): void {
       if (!SUPPORTED_DOCUMENT_EXTENSIONS.includes(ext.slice(1))) {
         return { error: `".${ext.slice(1)}" isn't a supported format. Use PPTX, PDF, DOCX, TXT, or MD.` }
       }
-      const text = await extractText(filePath)
+      // DOCX gets its headings/bold preserved (extractText()'s plain
+      // extractRawText() would flatten both) — PDF/TXT/MD have no
+      // equivalent formatting to preserve, so extractText() as before.
+      const text = ext === '.docx' ? await extractDocxAsFormattedText(filePath) : await extractText(filePath)
       if (text === UNSUPPORTED_TEXT) {
         return { error: 'No extractable text found in this file.' }
       }
@@ -377,6 +413,25 @@ export function registerIpcHandlers(window: BrowserWindow): void {
       return { error: error instanceof Error ? error.message : 'Failed to read the selected file.' }
     }
   })
+
+  ipcMain.handle(
+    IPC_CHANNELS.exportSlides,
+    async (_event, markdown: string, suggestedFileName: string): Promise<ExportSlidesResult> => {
+      const result = await dialog.showSaveDialog(window, {
+        defaultPath: suggestedFileName,
+        filters: [{ name: 'Markdown', extensions: ['md'] }]
+      })
+      if (result.canceled || !result.filePath) {
+        return { cancelled: true }
+      }
+      try {
+        writeFileSync(result.filePath, markdown, 'utf-8')
+        return { filePath: result.filePath }
+      } catch (error) {
+        return { error: error instanceof Error ? error.message : 'Failed to save the file.' }
+      }
+    }
+  )
 
   ipcMain.handle(
     IPC_CHANNELS.aiAskStart,

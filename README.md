@@ -12,6 +12,9 @@ Sarathi is an open-source desktop teleprompter for webinars and live talks. It s
 - **AI Listener** — Captures system audio, transcribes your audience's questions, and streams AI answers into a side panel
 - **Multi-provider AI** — Gemini, OpenAI, DeepSeek, and free OpenCode Zen; automatic failover if a provider is down
 - **Offline STT fallback** — AssemblyAI in the cloud, with local Whisper as an automatic backup
+- **Document viewer** — Open PDF, DOCX, PPTX, TXT, and Markdown files; DOCX and PPTX files use LibreOffice conversion when available for faithful visual previews
+- **Slide builder** — Import formatted DOCX/PPTX content, split Markdown into presentation slides, preview the deck, and export slide content
+- **Presentation overlay** — Use slide navigation, shortcut help, minimized overlay controls, and presenter-focused viewer controls while speaking
 - **Secure by design** — API keys are stored in your OS keychain via Electron safeStorage; **nothing is committed to this repo**
 - **Cross-platform** — Windows (NSIS installer), macOS, Linux
 
@@ -26,6 +29,12 @@ npm install
 npm run dev
 ```
 
+### Documents and slides
+
+The document picker accepts PDF, DOCX, PPTX, TXT, and Markdown files. PDF files open directly in the viewer. DOCX and PPTX files are converted to PDF with LibreOffice when it is installed, preserving their original visual layout; DOCX text remains available for slide generation and AI context. Without LibreOffice, DOCX files fall back to formatted text and PPTX files report that visual conversion is unavailable.
+
+Slide Builder imports headings, paragraphs, lists, and bold text from supported documents. Imported content can be reviewed as a deck and exported from the app.
+
 ### Adding API keys
 
 1. Launch the app and click the **Settings** (⚙) icon
@@ -39,6 +48,16 @@ npm run dev
 ```bash
 npm run build          # compile
 npm run dist:win       # Windows NSIS installer → dist-installer/
+```
+
+### Testing
+
+```bash
+npm run typecheck      # TypeScript validation
+npm test               # Run the complete test suite with coverage
+npm run test:pptx      # Test PPTX extraction
+npm run test:schemas   # Test shared IPC and settings schemas
+npm run test:stt       # Test speech endpointing
 ```
 
 ---
@@ -78,6 +97,10 @@ Pull requests are welcome. Please open an issue first for large changes.
 2. Create a feature branch
 3. `npm run dev` to test locally
 4. Open a PR against `master`
+
+### Contributors
+
+- [sejalkaul29-ux](https://github.com/sejalkaul29-ux)
 
 ---
 

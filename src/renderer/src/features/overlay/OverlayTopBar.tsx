@@ -21,7 +21,8 @@ export function OverlayTopBar({
   modeBadge,
   progress,
   counterText,
-  pauseIndicator
+  pauseIndicator,
+  lessonDurationMinutes
 }: {
   onHome: () => void
   onMinimize: () => void
@@ -30,6 +31,10 @@ export function OverlayTopBar({
   progress: number
   counterText: string
   pauseIndicator: string | null
+  /** Teacher's optional "Lesson Timer" (FR-01) — when set, the session
+   *  timer counts down class-period time remaining instead of just
+   *  counting up, warning as it runs low and again once past zero. */
+  lessonDurationMinutes: number | null
 }): React.JSX.Element {
   const [elapsed, setElapsed] = useState(0)
   const [clock, setClock] = useState(() => formatClock())
@@ -55,31 +60,52 @@ export function OverlayTopBar({
     return () => clearInterval(interval)
   }, [])
 
+  const remainingSeconds = lessonDurationMinutes !== null ? lessonDurationMinutes * 60 - elapsed : null
+  const isOvertime = remainingSeconds !== null && remainingSeconds < 0
+  const isLessonWarning = remainingSeconds !== null && !isOvertime && remainingSeconds <= 300
+  const timerColorClass = isOvertime ? 'text-[var(--danger)]' : isLessonWarning ? 'text-[var(--warning)]' : 'text-neutral-600'
+  const timerLabel =
+    remainingSeconds !== null
+      ? `${isOvertime ? '⏰ +' : '⏳ '}${formatElapsed(Math.abs(remainingSeconds))}`
+      : `⏱ ${formatElapsed(elapsed)}`
+  const timerTitle =
+    remainingSeconds !== null
+      ? isOvertime
+        ? 'Lesson timer — over the class period'
+        : 'Lesson timer — time remaining'
+      : 'Session timer'
+
   return (
     <div className="shrink-0 border-b border-white/10">
       <div className="flex items-center gap-2 px-3 py-1.5">
         <button
           onClick={onHome}
-          className="rounded text-xs text-neutral-500 hover:text-neutral-300 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
+          className="shrink-0 rounded text-xs text-neutral-500 hover:text-neutral-300 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
           title="Back to setup"
         >
           ← Setup
         </button>
-        <span className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">
-          {modeBadge}
-        </span>
-        {counterText && <span className="text-xs text-neutral-500 select-none">{counterText}</span>}
-        <div className="flex-1" />
-        {pauseIndicator && <span className="text-xs text-neutral-600 select-none">{pauseIndicator}</span>}
-        <span className="text-xs text-neutral-600 select-none" title="Session timer">
-          ⏱ {formatElapsed(elapsed)}
-        </span>
-        <span className="text-xs text-neutral-600 select-none" title="Current time">
-          🕐 {clock}
-        </span>
+        {/* Negotiable info — shrinks/clips first so Setup/capture-toggle/
+            minimize/close (below) never get pushed off-screen at the app's
+            360px minimum width. min-w-0 is required: flex items refuse to
+            shrink below their content's natural width otherwise. */}
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+          <span className="shrink-0 rounded bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">
+            {modeBadge}
+          </span>
+          {counterText && <span className="shrink-0 text-xs text-neutral-500 select-none">{counterText}</span>}
+          <div className="flex-1" />
+          {pauseIndicator && <span className="shrink-0 text-xs text-neutral-600 select-none">{pauseIndicator}</span>}
+          <span className={`shrink-0 text-xs select-none ${timerColorClass}`} title={timerTitle}>
+            {timerLabel}
+          </span>
+          <span className="shrink-0 text-xs text-neutral-600 select-none" title="Current time">
+            🕐 {clock}
+          </span>
+        </div>
         <button
           onClick={toggleCaptureVisibility}
-          className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40 ${
+          className={`flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40 ${
             visibleToCapture ? 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' : 'text-neutral-500 hover:text-neutral-300'
           }`}
           title={
@@ -91,7 +117,7 @@ export function OverlayTopBar({
           {visibleToCapture ? <Eye size={12} /> : <EyeOff size={12} />}
           {visibleToCapture ? 'Visible' : 'Hidden'}
         </button>
-        <div className="flex gap-1">
+        <div className="flex shrink-0 gap-1">
           <button onClick={onMinimize} className="rounded px-2 py-0.5 text-xs text-neutral-500 hover:text-neutral-300 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40">—</button>
           <button onClick={onClose} className="rounded px-2 py-0.5 text-xs text-neutral-500 hover:text-red-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)]/40">✕</button>
         </div>

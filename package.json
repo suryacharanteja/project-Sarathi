@@ -10,9 +10,15 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit",
+    "test:stt": "node --test src/main/services/stt/endpointing.test.ts",
+    "test:schemas": "node --import ./scripts/register-test-loader.mjs --test src/shared/schemas.test.ts",
+    "test:pptx": "node --import ./scripts/register-test-loader.mjs --test src/main/documents/extract-pptx.test.ts",
+    "test": "node --import ./scripts/register-test-loader.mjs --test --experimental-test-coverage \"src/**/*.test.ts\"",
     "dist:win": "npm run build && electron-builder --win nsis"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
     "@google/generative-ai": "^0.24.1",
     "@huggingface/transformers": "^4.2.0",
     "@xmldom/xmldom": "^0.8.11",
