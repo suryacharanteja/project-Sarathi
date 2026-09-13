@@ -1,6 +1,7 @@
 ﻿import { Home, Minus, Move, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Tooltip } from './tooltip'
+import sarathiIcon from '../../assets/sarathi-icon.png'
 
 /**
  * Frameless windows (frame:false) have no native title bar to drag by.
@@ -33,7 +34,7 @@ export function TitleBar({
             <Move size={14} />
           </span>
         </Tooltip>
-        <span className="text-lg leading-none">🦜</span>
+        <img src={sarathiIcon} alt="" className="h-5 w-5 rounded-full" />
         <span>Sarathi</span>
       </div>
       <div className="flex items-center gap-1" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
@@ -42,7 +43,7 @@ export function TitleBar({
           <Tooltip label="Back to home">
             <button
               onClick={onHome}
-              className="rounded-full p-1.5 text-neutral-500 transition hover:bg-black/5 hover:text-neutral-900"
+              className="rounded-full p-1.5 text-neutral-500 transition hover:bg-black/5 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
             >
               <Home size={16} />
             </button>
@@ -52,7 +53,7 @@ export function TitleBar({
           <Tooltip label="Minimize to bubble">
             <button
               onClick={onMinimize}
-              className="rounded-full p-1.5 text-neutral-500 transition hover:bg-black/5 hover:text-neutral-900"
+              className="rounded-full p-1.5 text-neutral-500 transition hover:bg-black/5 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
             >
               <Minus size={16} />
             </button>
@@ -62,7 +63,7 @@ export function TitleBar({
           <Tooltip label="Close Sarathi">
             <button
               onClick={onClose}
-              className="rounded-full p-1.5 text-neutral-500 transition hover:bg-red-500/10 hover:text-red-600"
+              className="rounded-full p-1.5 text-neutral-500 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)]/40"
             >
               <X size={16} />
             </button>

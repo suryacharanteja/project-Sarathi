@@ -51,7 +51,7 @@ export function Dropdown({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`flex items-center gap-1.5 rounded-lg border border-black/10 bg-black/[0.02] px-3 py-1.5 text-sm text-neutral-700 outline-none hover:bg-black/[0.06] ${className}`}
+        className={`flex items-center gap-1.5 rounded-lg border border-black/10 bg-black/[0.02] px-3 py-1.5 text-sm text-neutral-700 transition hover:bg-black/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40 ${className}`}
       >
         {current?.label ?? value}
         <ChevronDown size={14} className="text-neutral-400" />
@@ -71,7 +71,7 @@ export function Dropdown({
                   onChange(option.value)
                   setOpen(false)
                 }}
-                className={`block w-full whitespace-nowrap px-3 py-1.5 text-left hover:bg-black/[0.06] ${
+                className={`block w-full whitespace-nowrap px-3 py-1.5 text-left transition hover:bg-black/[0.06] focus-visible:outline-none focus-visible:bg-black/[0.06] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)]/40 ${
                   option.value === value ? 'bg-black/[0.04] font-medium' : ''
                 }`}
               >

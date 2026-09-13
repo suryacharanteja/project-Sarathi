@@ -1,5 +1,6 @@
 ﻿import { useRef } from 'react'
 import { Tooltip } from './tooltip'
+import sarathiIcon from '../../assets/sarathi-icon.png'
 
 /** Movement beyond this (px) turns a press into a drag instead of a click. */
 const DRAG_THRESHOLD = 4
@@ -63,9 +64,11 @@ export function MinimizedBubble({ onRestore }: { onRestore: () => void }): React
     <Tooltip label="Click to expand · drag to move">
       <button
         onMouseDown={handleMouseDown}
-        className="flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-neutral-950/95 text-2xl shadow-2xl backdrop-blur-xl transition hover:scale-105"
+        className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-neutral-950/95 shadow-2xl transition hover:scale-105"
+        // Inline, not backdrop-blur-xl — see index.css's .elevation-3 comment.
+        style={{ backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
       >
-        🦜
+        <img src={sarathiIcon} alt="" className="h-10 w-10 rounded-full" />
       </button>
     </Tooltip>
   )

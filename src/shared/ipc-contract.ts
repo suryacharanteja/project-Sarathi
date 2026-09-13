@@ -37,6 +37,7 @@ export const IPC_CHANNELS = {
   getDocumentHtml: 'document:getHtml',
   readDocumentBytes: 'document:readBytes',
   importSlideSource: 'slides:importSource',
+  exportSlides: 'slides:export',
   aiAskStart: 'ai:askStart',
   checkTurnComplete: 'ai:checkTurnComplete',
   aiChunk: 'ai:chunk',
@@ -256,6 +257,12 @@ export interface ImportSlideSourceResult {
   error?: string
 }
 
+export interface ExportSlidesResult {
+  filePath?: string
+  cancelled?: boolean
+  error?: string
+}
+
 export interface ScreenshotCaptureResult {
   dataUrl?: string
   error?: string
@@ -335,6 +342,7 @@ export interface SarathiApi {
   getDocumentHtml: (filePath: string) => Promise<GetDocumentHtmlResult>
   readDocumentBytes: (filePath: string) => Promise<ReadDocumentBytesResult>
   importSlideSource: () => Promise<ImportSlideSourceResult>
+  exportSlides: (markdown: string, suggestedFileName: string) => Promise<ExportSlidesResult>
   askAiStart: (request: AskAiRequest) => Promise<AskAiStartResult>
   checkTurnComplete: (request: CheckTurnCompleteRequest) => Promise<CheckTurnCompleteResult>
   onAiChunk: (callback: (event: AskAiChunkEvent) => void) => () => void

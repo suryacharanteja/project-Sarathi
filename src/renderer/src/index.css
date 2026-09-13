@@ -1,5 +1,21 @@
 @import 'tailwindcss';
 
+/* Self-hosted (not a Google Fonts CDN import) — the CSP's default-src
+   'self' would block an external font host, and this also keeps the app
+   fully offline-capable. Only the weights actually used are pulled in. */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/jetbrains-mono/400.css';
+
+/* FR-10 typography — overriding Tailwind's font tokens here makes Inter/
+   JetBrains Mono the default for every existing `font-sans`/`font-mono`
+   usage app-wide, without needing to touch each component's className. */
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
 /* Design tokens — see docs/FRD.md FR-10. Dark values are the overlay theme;
    the setup screen (light glass) overrides the subset it uses via
    [data-theme="light"] on its root container. */
@@ -22,6 +38,33 @@
   --bg-surface: rgba(255, 255, 255, 0.7);
   --accent: #6366f1;
   --text-hi: #111827;
+}
+
+/* FR-10 elevation system — a reusable depth scale instead of each
+   component approximating "how raised does this look" ad hoc.
+   Level 0: base window background.
+   Level 1: panels (e.g. side rails, the top bar).
+   Level 2: cards and modals sitting above their panel.
+   Level 3: floating overlays — cheatsheet, tooltips. */
+.elevation-0 {
+  background: var(--bg-base);
+}
+.elevation-1 {
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-edge);
+}
+.elevation-2 {
+  background: var(--bg-surface);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+}
+/* Level 3's blur is applied via inline style (see components using it),
+   not here — this Tailwind/Lightning CSS version silently strips the
+   unprefixed `backdrop-filter` from any compiled stylesheet rule (confirmed
+   via the compiled output; even Tailwind's own backdrop-blur-* utilities
+   have the same bug), keeping only the obsolete -webkit- one. An inline
+   style bypasses CSS-file processing entirely. */
+.elevation-3 {
 }
 
 /*

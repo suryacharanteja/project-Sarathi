@@ -63,8 +63,17 @@ export function SettingsModal({ onClose }: { onClose: () => void }): React.JSX.E
   }
 
   return (
-    <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-      <div className="flex max-h-[85vh] w-[90%] max-w-sm flex-col rounded-2xl border border-black/10 bg-white/95 shadow-2xl backdrop-blur-xl">
+    <div
+      className="absolute inset-0 z-10 flex items-center justify-center bg-black/30"
+      // Inline, not backdrop-blur-sm — this Tailwind/Lightning CSS build
+      // silently drops the unprefixed backdrop-filter (see index.css's
+      // .elevation-3 comment); inline styles bypass CSS-file processing.
+      style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+    >
+      <div
+        className="flex max-h-[85vh] w-[90%] max-w-sm flex-col rounded-2xl border border-black/10 bg-white/95 shadow-2xl"
+        style={{ backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
+      >
         <div className="flex items-center justify-between p-4 pb-3">
           <div className="flex items-center gap-1.5 text-sm font-semibold text-neutral-900">
             <KeyRound size={15} /> Settings

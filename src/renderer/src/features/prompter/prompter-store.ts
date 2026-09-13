@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 export type ContentMode = 'teleprompter' | 'carousel' | 'pdf' | 'document'
 
@@ -21,6 +22,10 @@ interface PrompterState {
   bookmarks: number[]
   pdfFilePath: string | null
   docHtml: string | null
+  /** Teacher persona's "Lesson Timer" (FR-01) — null means disabled. When
+   *  set, the overlay counts down instead of just counting up, warning as
+   *  the class period runs low or over. */
+  lessonDurationMinutes: number | null
   setScriptText: (text: string, fileName?: string) => void
   setScrollSpeed: (v: number) => void
   setFontSize: (v: number) => void
@@ -37,9 +42,12 @@ interface PrompterState {
   clearBookmarks: () => void
   setPdfFilePath: (path: string | null) => void
   setDocHtml: (html: string | null) => void
+  setLessonDurationMinutes: (minutes: number | null) => void
 }
 
-export const usePrompterStore = create<PrompterState>((set) => ({
+export const usePrompterStore = create<PrompterState>()(
+  persist(
+    (set) => ({
   scriptText: '',
   scriptFileName: null,
   scrollSpeed: 3,
@@ -52,6 +60,7 @@ export const usePrompterStore = create<PrompterState>((set) => ({
   bookmarks: [],
   pdfFilePath: null,
   docHtml: null,
+  lessonDurationMinutes: null,
 
   setScriptText: (text, fileName) =>
     set({ scriptText: text, scriptFileName: fileName ?? null, bookmarks: [] }),
@@ -89,5 +98,26 @@ export const usePrompterStore = create<PrompterState>((set) => ({
   clearBookmarks: () => set({ bookmarks: [] }),
 
   setPdfFilePath: (path) => set({ pdfFilePath: path }),
-  setDocHtml: (html) => set({ docHtml: html })
-}))
+  setDocHtml: (html) => set({ docHtml: html }),
+  setLessonDurationMinutes: (minutes) => set({ lessonDurationMinutes: minutes })
+    }),
+    {
+      name: 'sarathi-prompter-draft',
+      // Only content worth protecting from an accidental close/crash, plus
+      // cheap preference settings. Deliberately excludes session-specific
+      // state (contentMode, currentSlideIndex, bookmarks, pdfFilePath,
+      // docHtml, lessonDurationMinutes) — a pdfFilePath restored from a
+      // previous launch could point at a file that no longer exists, and
+      // the rest is meaningless without an active presenting session.
+      partialize: (state) => ({
+        scriptText: state.scriptText,
+        scriptFileName: state.scriptFileName,
+        slides: state.slides,
+        scrollSpeed: state.scrollSpeed,
+        fontSize: state.fontSize,
+        mirrorFlip: state.mirrorFlip,
+        aiListenerEnabled: state.aiListenerEnabled
+      })
+    }
+  )
+)

@@ -1,5 +1,31 @@
-import { useEffect } from 'react'
+import { Fragment, useEffect } from 'react'
 import { usePrompterStore } from '../prompter/prompter-store'
+
+/** Renders the `**bold**` / `- bullet` convention extract-pptx.ts and
+ *  extract-text.ts's DOCX import both now produce, so imported formatting
+ *  actually shows instead of literal asterisks. Deliberately not the
+ *  shared MarkdownLite component — its hardcoded text-sm/color styling is
+ *  tuned for AI answer cards and would fight this panel's own large,
+ *  presenter-adjustable font size and color. */
+function renderFormattedBody(text: string): React.ReactNode {
+  return text.split('\n').map((line, lineIndex) => {
+    const isBullet = /^[-*]\s+/.test(line)
+    const content = isBullet ? line.replace(/^[-*]\s+/, '') : line
+    const parts = content.split(/(\*\*[^*]+\*\*)/g).filter(Boolean)
+    const inline = parts.map((part, i) =>
+      part.startsWith('**') && part.endsWith('**') ? (
+        <strong key={i}>{part.slice(2, -2)}</strong>
+      ) : (
+        <Fragment key={i}>{part}</Fragment>
+      )
+    )
+    return (
+      <div key={lineIndex}>
+        {isBullet ? <>• {inline}</> : inline}
+      </div>
+    )
+  })
+}
 
 export function SlideCarouselPanel({
   mirrorFlip,
@@ -56,7 +82,7 @@ export function SlideCarouselPanel({
             wordBreak: 'break-word'
           }}
         >
-          {current.body || <span className="text-base italic text-neutral-600">(empty slide)</span>}
+          {current.body ? renderFormattedBody(current.body) : <span className="text-base italic text-neutral-600">(empty slide)</span>}
         </div>
       </div>
 

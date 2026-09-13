@@ -103,8 +103,15 @@ export function ProfileModal({
   const learningProfile = profiles?.find((p) => p.id === learningProfileId) ?? null
 
   return (
-    <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-      <div className="flex max-h-[85%] w-[90%] max-w-sm flex-col rounded-2xl border border-black/10 bg-white/95 p-4 shadow-2xl backdrop-blur-xl">
+    <div
+      className="absolute inset-0 z-10 flex items-center justify-center bg-black/30"
+      // Inline, not backdrop-blur-sm — see index.css's .elevation-3 comment.
+      style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+    >
+      <div
+        className="flex max-h-[85%] w-[90%] max-w-sm flex-col rounded-2xl border border-black/10 bg-white/95 p-4 shadow-2xl"
+        style={{ backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
+      >
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-sm font-semibold text-neutral-900">
             <User size={15} />{' '}

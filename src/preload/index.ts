@@ -49,6 +49,8 @@ const api: SarathiApi = {
   getDocumentHtml: (filePath: string) => ipcRenderer.invoke(IPC_CHANNELS.getDocumentHtml, filePath),
   readDocumentBytes: (filePath: string) => ipcRenderer.invoke(IPC_CHANNELS.readDocumentBytes, filePath),
   importSlideSource: () => ipcRenderer.invoke(IPC_CHANNELS.importSlideSource),
+  exportSlides: (markdown: string, suggestedFileName: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.exportSlides, markdown, suggestedFileName),
   askAiStart: (request: AskAiRequest) => ipcRenderer.invoke(IPC_CHANNELS.aiAskStart, request),
   checkTurnComplete: (request: CheckTurnCompleteRequest) =>
     ipcRenderer.invoke(IPC_CHANNELS.checkTurnComplete, request),

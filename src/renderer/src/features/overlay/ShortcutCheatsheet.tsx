@@ -21,7 +21,9 @@ const SHORTCUTS: { keys: string; action: string; mode: string }[] = [
 export function ShortcutCheatsheet({ onClose }: { onClose: () => void }): React.JSX.Element {
   return (
     <div
-      className="cheatsheet-fade-in absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      className="elevation-3 cheatsheet-fade-in absolute inset-0 z-50 flex items-center justify-center bg-black/60"
+      // Inline, not a CSS class — see the .elevation-3 comment in index.css.
+      style={{ backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}
       onClick={onClose}
     >
       <style>{`
@@ -32,7 +34,7 @@ export function ShortcutCheatsheet({ onClose }: { onClose: () => void }): React.
       `}</style>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="cheatsheet-card-in max-h-[85%] w-[90%] max-w-lg overflow-y-auto rounded-xl border border-white/10 bg-neutral-900/95 p-4 shadow-2xl"
+        className="elevation-2 cheatsheet-card-in max-h-[85%] w-[90%] max-w-lg overflow-y-auto rounded-xl p-4"
       >
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-neutral-200">Keyboard Shortcuts</h2>

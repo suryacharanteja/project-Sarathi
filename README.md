@@ -79,6 +79,10 @@ Pull requests are welcome. Please open an issue first for large changes.
 3. `npm run dev` to test locally
 4. Open a PR against `master`
 
+### Contributors
+
+- [sejalkaul29-ux](https://github.com/sejalkaul29-ux)
+
 ---
 
 ## License

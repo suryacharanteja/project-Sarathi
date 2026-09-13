@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, Trash2, ChevronUp, ChevronDown, GripVertical, FileUp } from 'lucide-react'
+import { Plus, Trash2, ChevronUp, ChevronDown, GripVertical, FileUp, FileDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { usePrompterStore, type Slide } from '../prompter/prompter-store'
 
@@ -25,11 +25,18 @@ function parseSlidesFromText(text: string): Slide[] {
   return slides.length > 0 ? slides : [{ id: crypto.randomUUID(), title: 'Slide 1', body: text.trim() }]
 }
 
+/** Inverse of parseSlidesFromText — round-trips back into the same
+ *  `# Title` heading format the importer understands. */
+function slidesToMarkdown(slides: Slide[]): string {
+  return slides.map((s) => `# ${s.title || 'Untitled'}\n\n${s.body}`).join('\n\n')
+}
+
 export function SlideBuilder(): React.JSX.Element {
   const { slides, addSlide, updateSlide, removeSlide, reorderSlide, setSlides } = usePrompterStore()
   const [selectedId, setSelectedId] = useState<string | null>(slides[0]?.id ?? null)
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [importing, setImporting] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     if (selectedId && slides.some((s) => s.id === selectedId)) return
@@ -50,6 +57,11 @@ export function SlideBuilder(): React.JSX.Element {
     const target = index + direction
     if (target < 0 || target >= slides.length) return
     reorderSlide(index, target)
+  }
+
+  function handleDeleteSelected(): void {
+    if (!selected) return
+    removeSlide(selected.id)
   }
 
   async function handleImport(): Promise<void> {
@@ -76,6 +88,26 @@ export function SlideBuilder(): React.JSX.Element {
       }
     } finally {
       setImporting(false)
+    }
+  }
+
+  async function handleExport(): Promise<void> {
+    if (slides.length === 0) {
+      toast.error('Add at least one slide before exporting.')
+      return
+    }
+    setExporting(true)
+    try {
+      const markdown = slidesToMarkdown(slides)
+      const result = await window.sarathi.exportSlides(markdown, 'slides.md')
+      if (result.cancelled) return
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+      toast.success(`Saved ${slides.length} slide${slides.length === 1 ? '' : 's'} to ${result.filePath}`)
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -126,6 +158,14 @@ export function SlideBuilder(): React.JSX.Element {
             <Plus size={12} className="mx-auto" />
           </button>
           <button
+            onClick={handleDeleteSelected}
+            disabled={!selected}
+            title="Delete slide"
+            className="flex-1 rounded-lg border border-black/10 bg-white py-1 text-neutral-600 transition hover:bg-red-50 hover:text-red-500 disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)]/40"
+          >
+            <Trash2 size={12} className="mx-auto" />
+          </button>
+          <button
             onClick={() => moveSelected(-1)}
             disabled={!selected}
             title="Move up"
@@ -142,14 +182,26 @@ export function SlideBuilder(): React.JSX.Element {
             <ChevronDown size={12} className="mx-auto" />
           </button>
         </div>
-        <button
-          onClick={handleImport}
-          disabled={importing}
-          className="flex w-full items-center justify-center gap-1 rounded-lg border border-black/10 bg-white py-1 text-xs text-neutral-600 transition hover:bg-black/[0.04] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
-        >
-          <FileUp size={12} />
-          {importing ? 'Importing…' : 'Import from file'}
-        </button>
+        <div className="flex gap-1">
+          <button
+            onClick={handleImport}
+            disabled={importing}
+            title="Import from file"
+            className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-black/10 bg-white py-1 text-xs text-neutral-600 transition hover:bg-black/[0.04] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
+          >
+            <FileUp size={12} />
+            {importing ? 'Importing…' : 'Import'}
+          </button>
+          <button
+            onClick={handleExport}
+            disabled={exporting || slides.length === 0}
+            title="Export slides to a Markdown file"
+            className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-black/10 bg-white py-1 text-xs text-neutral-600 transition hover:bg-black/[0.04] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
+          >
+            <FileDown size={12} />
+            {exporting ? 'Saving…' : 'Export'}
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 space-y-2">
