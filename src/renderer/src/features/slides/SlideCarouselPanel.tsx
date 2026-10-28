@@ -56,7 +56,7 @@ export function SlideCarouselPanel({
   if (!current) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <span className="text-base italic text-neutral-600">No slides loaded — go back to Setup and add slides.</span>
+        <span className="text-base italic text-[var(--text-mid)]">No slides loaded — go back to Setup and add slides.</span>
       </div>
     )
   }
@@ -69,7 +69,7 @@ export function SlideCarouselPanel({
         className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-10 py-8 text-center select-none"
         style={{ transform: mirrorFlip ? 'scaleX(-1)' : undefined }}
       >
-        <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-indigo-400">
+        <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
           {current.title || 'Untitled'}
         </p>
         <div
@@ -77,35 +77,35 @@ export function SlideCarouselPanel({
             fontSize: `${fontSize}px`,
             lineHeight: 1.5,
             fontFamily: '"Georgia", serif',
-            color: '#f5f5f5',
+            color: 'var(--text-hi)',
             whiteSpace: 'pre-wrap',
             wordBreak: 'break-word'
           }}
         >
-          {current.body ? renderFormattedBody(current.body) : <span className="text-base italic text-neutral-600">(empty slide)</span>}
+          {current.body ? renderFormattedBody(current.body) : <span className="text-base italic text-[var(--text-mid)]">(empty slide)</span>}
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center justify-between gap-3 border-t border-white/10 px-4 py-2">
+      <div className="flex shrink-0 items-center justify-between gap-3 border-t border-[var(--bg-edge)] px-4 py-2">
         <button
           onClick={() => setCurrentSlideIndex(currentSlideIndex - 1)}
           disabled={currentSlideIndex === 0}
-          className="rounded px-2 py-1 text-xs text-neutral-400 transition hover:text-neutral-100 disabled:opacity-30 disabled:hover:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
+          className="rounded px-2 py-1 text-xs text-[var(--text-mid)] transition hover:text-[var(--text-hi)] disabled:opacity-30 disabled:hover:text-[var(--text-mid)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
         >
           ← Previous
         </button>
-        <span className="select-none text-xs text-neutral-500">
+        <span className="select-none text-xs text-[var(--text-mid)]">
           Slide {currentSlideIndex + 1} / {total}
         </span>
         <button
           onClick={() => setCurrentSlideIndex(currentSlideIndex + 1)}
           disabled={currentSlideIndex === total - 1}
-          className="rounded px-2 py-1 text-xs text-neutral-400 transition hover:text-neutral-100 disabled:opacity-30 disabled:hover:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
+          className="rounded px-2 py-1 text-xs text-[var(--text-mid)] transition hover:text-[var(--text-hi)] disabled:opacity-30 disabled:hover:text-[var(--text-mid)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
         >
           Next →
         </button>
       </div>
-      <div className="h-1 w-full shrink-0 bg-white/5">
+      <div className="h-1 w-full shrink-0 bg-[var(--state-layer)]">
         <div className="h-full bg-[var(--accent)] transition-all duration-300" style={{ width: `${progress}%` }} />
       </div>
     </div>

@@ -121,56 +121,56 @@ export function AnswerPreferencesModal({
       style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
     >
       <div
-        className="flex max-h-[85%] w-[90%] max-w-sm flex-col rounded-2xl border border-black/10 bg-white/95 p-4 shadow-2xl"
+        className="flex max-h-[85%] w-[90%] max-w-sm flex-col rounded-2xl border border-[var(--bg-edge)] bg-[var(--bg-surface)] p-4 shadow-2xl"
         style={{ backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
       >
         <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-sm font-semibold text-neutral-900">
+          <div className="flex items-center gap-1.5 text-sm font-semibold text-[var(--text-hi)]">
             <MessageSquare size={15} /> Answer Preferences
           </div>
-          <button onClick={onClose} className="rounded-full p-1 text-neutral-500 hover:bg-black/5">
+          <button onClick={onClose} className="rounded-full p-1 text-[var(--text-mid)] hover:bg-[var(--state-layer)]">
             <X size={16} />
           </button>
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto">
           <div>
-            <p className="mb-1.5 text-xs font-medium text-neutral-600">Tone</p>
+            <p className="mb-1.5 text-xs font-medium text-[var(--text-mid)]">Tone</p>
             <Dropdown value={draft.tone} onChange={(v) => set('tone', v as AnswerPreferences['tone'])} options={TONE_OPTIONS} />
-            <p className="mt-1 text-[11px] text-neutral-400">{TONE_OPTIONS.find((o) => o.value === draft.tone)?.hint}</p>
+            <p className="mt-1 text-[11px] text-[var(--text-mid)]">{TONE_OPTIONS.find((o) => o.value === draft.tone)?.hint}</p>
           </div>
 
           <div>
-            <p className="mb-1.5 text-xs font-medium text-neutral-600">Format</p>
+            <p className="mb-1.5 text-xs font-medium text-[var(--text-mid)]">Format</p>
             <Dropdown value={draft.format} onChange={(v) => set('format', v as AnswerFormat)} options={FORMAT_OPTIONS} />
-            <p className="mt-1 text-[11px] text-neutral-400">{FORMAT_OPTIONS.find((o) => o.value === draft.format)?.hint}</p>
+            <p className="mt-1 text-[11px] text-[var(--text-mid)]">{FORMAT_OPTIONS.find((o) => o.value === draft.format)?.hint}</p>
           </div>
 
           <div>
-            <p className="mb-1.5 text-xs font-medium text-neutral-600">Target Seniority</p>
+            <p className="mb-1.5 text-xs font-medium text-[var(--text-mid)]">Target Seniority</p>
             <Dropdown
               value={draft.seniority}
               onChange={(v) => set('seniority', v as AnswerPreferences['seniority'])}
               options={SENIORITY_OPTIONS}
             />
-            <p className="mt-1 text-[11px] text-neutral-400">
+            <p className="mt-1 text-[11px] text-[var(--text-mid)]">
               {SENIORITY_OPTIONS.find((o) => o.value === draft.seniority)?.hint}
             </p>
           </div>
 
           <div>
-            <p className="mb-1.5 text-xs font-medium text-neutral-600">Preferred Code Language</p>
+            <p className="mb-1.5 text-xs font-medium text-[var(--text-mid)]">Preferred Code Language</p>
             <TextInput
               placeholder="Python"
               value={draft.codeLanguage}
               onChange={(e) => set('codeLanguage', e.target.value)}
             />
-            <p className="mt-1 text-[11px] text-neutral-400">Used whenever a coding answer is generated.</p>
+            <p className="mt-1 text-[11px] text-[var(--text-mid)]">Used whenever a coding answer is generated.</p>
           </div>
 
-          <div className="space-y-1 border-t border-black/5 pt-3">
-            <p className="text-xs font-medium text-neutral-600">Answer Frameworks</p>
-            <p className="mb-1 text-[11px] leading-snug text-neutral-400">
+          <div className="space-y-1 border-t border-[var(--bg-edge)] pt-3">
+            <p className="text-xs font-medium text-[var(--text-mid)]">Answer Frameworks</p>
+            <p className="mb-1 text-[11px] leading-snug text-[var(--text-mid)]">
               Select which structured frameworks Sarathi is allowed to use, based on the type of question detected.
               Leave none selected to always get a plain, unstructured answer instead.
             </p>
@@ -185,7 +185,7 @@ export function AnswerPreferencesModal({
                   <button
                     type="button"
                     onClick={() => setExpandedPreview((cur) => (cur === type ? null : type))}
-                    className="flex shrink-0 items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-neutral-500 hover:bg-black/5"
+                    className="flex shrink-0 items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-mid)] hover:bg-[var(--state-layer)]"
                   >
                     Preview
                     <ChevronDown
@@ -195,16 +195,16 @@ export function AnswerPreferencesModal({
                   </button>
                 </div>
                 {expandedPreview === type && (
-                  <div className="mb-1.5 space-y-1 rounded-md border border-black/10 bg-black/[0.02] p-2 text-[11px] leading-snug">
-                    <p className="text-neutral-500">{FRAMEWORK_PREVIEWS[type].question}</p>
-                    <p className="text-neutral-700">{FRAMEWORK_PREVIEWS[type].example}</p>
+                  <div className="mb-1.5 space-y-1 rounded-md border border-[var(--bg-edge)] bg-[var(--state-layer)] p-2 text-[11px] leading-snug">
+                    <p className="text-[var(--text-mid)]">{FRAMEWORK_PREVIEWS[type].question}</p>
+                    <p className="text-[var(--text-hi)]">{FRAMEWORK_PREVIEWS[type].example}</p>
                   </div>
                 )}
               </div>
             ))}
           </div>
 
-          <div className="space-y-3 border-t border-black/5 pt-3">
+          <div className="space-y-3 border-t border-[var(--bg-edge)] pt-3">
             <Toggle
               checked={draft.useFillerWords}
               onChange={(v) => set('useFillerWords', v)}
@@ -224,7 +224,7 @@ export function AnswerPreferencesModal({
                 }
               />
               {profileId === null ? (
-                <p className="text-[11px] text-neutral-400">
+                <p className="text-[11px] text-[var(--text-mid)]">
                   Select a profile for this session to set up a speaking style.
                 </p>
               ) : (
@@ -232,13 +232,13 @@ export function AnswerPreferencesModal({
                   <button
                     type="button"
                     onClick={() => setShowPractice(true)}
-                    className="flex items-center gap-1 rounded-md bg-black/5 px-2 py-1 text-[11px] font-medium text-neutral-700 transition hover:bg-black/10"
+                    className="flex items-center gap-1 rounded-md bg-[var(--state-layer)] px-2 py-1 text-[11px] font-medium text-[var(--text-hi)] transition hover:bg-[var(--state-layer)]"
                   >
                     <Sparkles size={11} />
                     {hasSpeakingStyle ? 'Redo practice interview' : 'Set up now'}
                   </button>
                   {hasSpeakingStyle && profile?.speakingStyleGeneratedAt && (
-                    <span className="text-[11px] text-neutral-400">
+                    <span className="text-[11px] text-[var(--text-mid)]">
                       Learned {new Date(profile.speakingStyleGeneratedAt).toLocaleDateString()}
                     </span>
                   )}
@@ -253,7 +253,7 @@ export function AnswerPreferencesModal({
             onSave(draft)
             onClose()
           }}
-          className="mt-3 w-full rounded-lg bg-neutral-900 py-2 text-sm font-medium text-white transition hover:bg-neutral-700"
+          className="mt-3 w-full rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white transition hover:bg-indigo-700"
         >
           Save
         </button>

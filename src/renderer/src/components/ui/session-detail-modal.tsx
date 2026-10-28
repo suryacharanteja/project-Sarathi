@@ -30,51 +30,51 @@ export function SessionDetailModal({
       style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
     >
       <div
-        className="flex max-h-[85%] w-[90%] max-w-sm flex-col rounded-2xl border border-black/10 bg-white/95 p-4 shadow-2xl"
+        className="flex max-h-[85%] w-[90%] max-w-sm flex-col rounded-2xl border border-[var(--bg-edge)] bg-[var(--bg-surface)] p-4 shadow-2xl"
         style={{ backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
       >
         <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-sm font-semibold text-neutral-900">
+          <div className="flex items-center gap-1.5 text-sm font-semibold text-[var(--text-hi)]">
             <Briefcase size={15} /> {session?.form.company || 'Session details'}
           </div>
-          <button onClick={onClose} className="rounded-full p-1 text-neutral-500 hover:bg-black/5">
+          <button onClick={onClose} className="rounded-full p-1 text-[var(--text-mid)] hover:bg-[var(--state-layer)]">
             <X size={16} />
           </button>
         </div>
 
         {loading ? (
-          <p className="py-4 text-center text-sm text-neutral-500">Loading…</p>
+          <p className="py-4 text-center text-sm text-[var(--text-mid)]">Loading…</p>
         ) : !session ? (
-          <p className="py-4 text-center text-sm text-neutral-500">Session not found.</p>
+          <p className="py-4 text-center text-sm text-[var(--text-mid)]">Session not found.</p>
         ) : (
           <div className="flex-1 space-y-3 overflow-y-auto">
-            <p className="text-xs text-neutral-400">{new Date(session.createdAt).toLocaleString()}</p>
+            <p className="text-xs text-[var(--text-mid)]">{new Date(session.createdAt).toLocaleString()}</p>
 
             {session.form.jobDescription && (
               <div>
-                <div className="mb-1 flex items-center gap-1.5 text-xs font-medium text-neutral-600">
+                <div className="mb-1 flex items-center gap-1.5 text-xs font-medium text-[var(--text-mid)]">
                   <FileText size={12} /> Job Description
                 </div>
-                <p className="text-sm text-neutral-800">{session.form.jobDescription}</p>
+                <p className="text-sm text-[var(--text-hi)]">{session.form.jobDescription}</p>
               </div>
             )}
 
             <div>
-              <p className="mb-1.5 text-xs font-medium text-neutral-600">Transcript</p>
+              <p className="mb-1.5 text-xs font-medium text-[var(--text-mid)]">Transcript</p>
               {!session.form.saveTranscript ? (
-                <p className="text-sm text-neutral-400">
+                <p className="text-sm text-[var(--text-mid)]">
                   Save Transcript was off for this session — no transcript was saved.
                 </p>
               ) : !transcript || transcript.length === 0 ? (
-                <p className="text-sm text-neutral-400">No transcript was saved for this session.</p>
+                <p className="text-sm text-[var(--text-mid)]">No transcript was saved for this session.</p>
               ) : (
                 <div className="space-y-2">
                   {transcript.map((message) => (
-                    <div key={message.id} className="flex items-start gap-1.5 text-sm text-neutral-800">
+                    <div key={message.id} className="flex items-start gap-1.5 text-sm text-[var(--text-hi)]">
                       {message.source === 'system' ? (
-                        <Radio size={12} className="mt-1 shrink-0 text-neutral-400" />
+                        <Radio size={12} className="mt-1 shrink-0 text-[var(--text-mid)]" />
                       ) : (
-                        <Mic size={12} className="mt-1 shrink-0 text-neutral-400" />
+                        <Mic size={12} className="mt-1 shrink-0 text-[var(--text-mid)]" />
                       )}
                       <span>{message.text}</span>
                     </div>

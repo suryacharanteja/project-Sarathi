@@ -42,21 +42,34 @@ export function createAudioCapture(
   async function doStartMic(): Promise<void> {
     if (runtime.mic.active) return
 
-    const result = await window.sarathi.sttStart('mic')
-    if (!result.success) throw new Error(result.error ?? 'Failed to start mic transcription.')
+    try {
+      const result = await window.sarathi.sttStart('mic')
+      if (!result.success) throw new Error(result.error ?? 'Failed to start mic transcription.')
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true }
-    })
-    const context = new AudioContext()
-    await context.resume()
-    pipeline.resetSourceSampleQueue('mic')
-    const processor = await pipeline.buildAudioProcessor(context, stream, 'mic', () => runtime.mic.active)
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true }
+      })
+      runtime.mic.stream = stream
+      const context = new AudioContext()
+      runtime.mic.context = context
+      await context.resume()
+      pipeline.resetSourceSampleQueue('mic')
+      const processor = await pipeline.buildAudioProcessor(context, stream, 'mic', () => runtime.mic.active)
 
-    runtime.mic.context = context
-    runtime.mic.stream = stream
-    runtime.mic.processor = processor
-    runtime.mic.active = true
+      runtime.mic.context = context
+      runtime.mic.stream = stream
+      runtime.mic.processor = processor
+      runtime.mic.active = true
+    } catch (error) {
+      pipeline.stopAudioResources(runtime.mic.context ?? undefined, runtime.mic.stream ?? undefined, runtime.mic.processor ?? undefined)
+      runtime.mic.context = null
+      runtime.mic.stream = null
+      runtime.mic.processor = null
+      runtime.mic.active = false
+      pipeline.resetSourceSampleQueue('mic')
+      await window.sarathi.sttStop('mic').catch(() => undefined)
+      throw error
+    }
   }
 
   async function doStopMic(): Promise<void> {
@@ -74,40 +87,53 @@ export function createAudioCapture(
   async function doStartSystem(): Promise<void> {
     if (runtime.system.active) return
 
-    const result = await window.sarathi.sttStart('system')
-    if (!result.success) throw new Error(result.error ?? 'Failed to start system-audio transcription.')
+    try {
+      const result = await window.sarathi.sttStart('system')
+      if (!result.success) throw new Error(result.error ?? 'Failed to start system-audio transcription.')
 
-    // Source selection is handled entirely by the main process's
-    // setDisplayMediaRequestHandler (electron-audio-loopback) now — no more
-    // desktopCapturer round trip or blind sources[0] pick from here.
-    const stream = await pipeline.getSystemAudioStream()
-    const videoTrack = stream.getVideoTracks()[0]
-    if (videoTrack && pipeline.isLikelyCameraTrack(videoTrack.label)) {
-      stream.getTracks().forEach((track) => track.stop())
-      throw new Error(`Desktop capture fell back to a camera source (${videoTrack.label || 'unknown'}).`)
-    }
-    stream.getVideoTracks().forEach((track) => track.stop())
+      // Source selection is handled entirely by the main process's
+      // setDisplayMediaRequestHandler (electron-audio-loopback) now — no more
+      // desktopCapturer round trip or blind sources[0] pick from here.
+      const stream = await pipeline.getSystemAudioStream()
+      runtime.system.stream = stream
+      const videoTrack = stream.getVideoTracks()[0]
+      if (videoTrack && pipeline.isLikelyCameraTrack(videoTrack.label)) {
+        stream.getTracks().forEach((track) => track.stop())
+        throw new Error(`Desktop capture fell back to a camera source (${videoTrack.label || 'unknown'}).`)
+      }
+      stream.getVideoTracks().forEach((track) => track.stop())
 
-    // 'active'/runtime state doesn't reflect the underlying track dying —
-    // Windows/Chromium can tear down a loopback session mid-call (source
-    // window closed, audio device changed, OS revokes it) without the app
-    // doing anything wrong. Without this, the only way to notice was
-    // inferring it from up to 40s of silence via the RMS watchdog. Listening
-    // directly cuts that to the watchdog's next ~5s tick.
-    stream.getAudioTracks()[0]?.addEventListener('ended', () => {
+      // 'active'/runtime state doesn't reflect the underlying track dying —
+      // Windows/Chromium can tear down a loopback session mid-call (source
+      // window closed, audio device changed, OS revokes it) without the app
+      // doing anything wrong. Without this, the only way to notice was
+      // inferring it from up to 40s of silence via the RMS watchdog. Listening
+      // directly cuts that to the watchdog's next ~5s tick.
+      stream.getAudioTracks()[0]?.addEventListener('ended', () => {
+        runtime.system.active = false
+        onTrackEnded?.('system')
+      })
+
+      const context = new AudioContext()
+      runtime.system.context = context
+      await context.resume()
+      pipeline.resetSourceSampleQueue('system')
+      const processor = await pipeline.buildAudioProcessor(context, stream, 'system', () => runtime.system.active)
+
+      runtime.system.context = context
+      runtime.system.stream = stream
+      runtime.system.processor = processor
+      runtime.system.active = true
+    } catch (error) {
+      pipeline.stopAudioResources(runtime.system.context ?? undefined, runtime.system.stream ?? undefined, runtime.system.processor ?? undefined)
+      runtime.system.context = null
+      runtime.system.stream = null
+      runtime.system.processor = null
       runtime.system.active = false
-      onTrackEnded?.('system')
-    })
-
-    const context = new AudioContext()
-    await context.resume()
-    pipeline.resetSourceSampleQueue('system')
-    const processor = await pipeline.buildAudioProcessor(context, stream, 'system', () => runtime.system.active)
-
-    runtime.system.context = context
-    runtime.system.stream = stream
-    runtime.system.processor = processor
-    runtime.system.active = true
+      pipeline.resetSourceSampleQueue('system')
+      await window.sarathi.sttStop('system').catch(() => undefined)
+      throw error
+    }
   }
 
   async function doStopSystem(): Promise<void> {

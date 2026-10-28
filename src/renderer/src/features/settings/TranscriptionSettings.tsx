@@ -197,19 +197,19 @@ export function TranscriptionSettings({
   const percent = status?.phase === 'downloading' ? status.percent : null
 
   return (
-    <div className="space-y-3 rounded-lg border border-black/10 bg-black/[0.02] p-3">
-      <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-900">
+    <div className="space-y-3 rounded-lg border border-[var(--bg-edge)] bg-[var(--state-layer)] p-3">
+      <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-hi)]">
         <HardDrive size={13} /> Transcription
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-neutral-600">Speech engine</label>
+        <label className="mb-1 block text-xs font-medium text-[var(--text-mid)]">Speech engine</label>
         <Dropdown
           value={settings.sttEngine}
           options={ENGINE_OPTIONS}
           onChange={(value) => onChange({ sttEngine: value as AppSettings['sttEngine'] })}
         />
-        <p className="mt-1 text-[11px] leading-snug text-neutral-500">
+        <p className="mt-1 text-[11px] leading-snug text-[var(--text-mid)]">
           {settings.sttEngine === 'local'
             ? 'Speech is transcribed by Whisper on this machine. No audio is uploaded anywhere.'
             : 'Audio is streamed to AssemblyAI for transcription — fast and accurate as long as the service is reachable.'}
@@ -217,7 +217,7 @@ export function TranscriptionSettings({
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-neutral-600">Spoken language</label>
+        <label className="mb-1 block text-xs font-medium text-[var(--text-mid)]">Spoken language</label>
         <Dropdown
           value={settings.sttLanguage}
           options={LANGUAGE_OPTIONS}
@@ -225,9 +225,9 @@ export function TranscriptionSettings({
         />
       </div>
 
-      <div className="space-y-2 rounded-md border border-black/10 bg-white/70 p-2.5">
+      <div className="space-y-2 rounded-md border border-[var(--bg-edge)] bg-[var(--state-layer)] p-2.5">
         <div>
-          <label className="mb-1 block text-xs font-medium text-neutral-600">Offline backup model</label>
+          <label className="mb-1 block text-xs font-medium text-[var(--text-mid)]">Offline backup model</label>
           <Dropdown
             value={settings.sttModel}
             options={STT_MODELS.map((model) => ({
@@ -236,13 +236,13 @@ export function TranscriptionSettings({
             }))}
             onChange={handleModelChange}
           />
-          <p className="mt-1 text-[11px] leading-snug text-neutral-500">{sttModelInfo(settings.sttModel).note}</p>
+          <p className="mt-1 text-[11px] leading-snug text-[var(--text-mid)]">{sttModelInfo(settings.sttModel).note}</p>
         </div>
 
-        <div className="flex items-center justify-between gap-2 border-t border-black/5 pt-2">
-          <span className="text-xs font-medium text-neutral-700">Weights</span>
+        <div className="flex items-center justify-between gap-2 border-t border-[var(--bg-edge)] pt-2">
+          <span className="text-xs font-medium text-[var(--text-hi)]">Weights</span>
           {ready ? (
-            <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-700">
+            <span className="flex items-center gap-1 text-[11px] font-medium text-[var(--positive)]">
               <Check size={12} strokeWidth={3} /> Ready
             </span>
           ) : (
@@ -250,7 +250,7 @@ export function TranscriptionSettings({
               type="button"
               onClick={handleDownload}
               disabled={downloading}
-              className="flex items-center gap-1 rounded-md bg-neutral-900 px-2 py-1 text-[11px] font-medium text-white transition hover:bg-neutral-700 disabled:opacity-60"
+              className="flex items-center gap-1 rounded-md bg-indigo-600 px-2 py-1 text-[11px] font-medium text-white transition hover:bg-indigo-700 disabled:opacity-60"
             >
               {downloading ? <Loader2 size={11} className="animate-spin" /> : <Download size={11} />}
               {downloading ? 'Downloading…' : `Download ${sttModelInfo(settings.sttModel).sizeLabel}`}
@@ -260,35 +260,35 @@ export function TranscriptionSettings({
 
         {percent !== null && (
           <div className="space-y-1">
-            <div className="h-1 w-full overflow-hidden rounded-full bg-black/10">
-              <div className="h-full bg-neutral-900 transition-all" style={{ width: `${percent}%` }} />
+            <div className="h-1 w-full overflow-hidden rounded-full bg-[var(--state-layer)]">
+              <div className="h-full bg-indigo-600 transition-all" style={{ width: `${percent}%` }} />
             </div>
-            <p className="text-[10px] text-neutral-500">
+            <p className="text-[10px] text-[var(--text-mid)]">
               {percent}%
               {status?.totalBytes ? ` · ${formatBytes(status.loadedBytes)} of ${formatBytes(status.totalBytes)}` : ''}
             </p>
           </div>
         )}
 
-        {status?.phase === 'loading' && <p className="text-[10px] text-neutral-500">Loading the model into memory…</p>}
+        {status?.phase === 'loading' && <p className="text-[10px] text-[var(--text-mid)]">Loading the model into memory…</p>}
 
-        <p className="text-[11px] leading-snug text-neutral-500">
+        <p className="text-[11px] leading-snug text-[var(--text-mid)]">
           Downloaded once, kept on this device. This is what Sarathi automatically switches to if
           AssemblyAI becomes unreachable mid-call — download it now so the fallback is ready
           before you need it, not during an interview.
         </p>
 
         {(downloadError || status?.error) && (
-          <p className="text-[11px] leading-snug text-red-600">{downloadError ?? status?.error}</p>
+          <p className="text-[11px] leading-snug text-[var(--danger)]">{downloadError ?? status?.error}</p>
         )}
       </div>
 
-      <div className="space-y-1.5 border-t border-black/5 pt-2">
+      <div className="space-y-1.5 border-t border-[var(--bg-edge)] pt-2">
         <button
           type="button"
           onClick={testing ? handleStopTest : handleTestMic}
           className={`flex w-full items-center justify-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
-            testing ? 'bg-red-500/10 text-red-600 hover:bg-red-500/20' : 'bg-neutral-900 text-white hover:bg-neutral-700'
+            testing ? 'bg-red-500/10 text-[var(--danger)] hover:bg-red-500/20' : 'bg-indigo-600 text-white hover:bg-indigo-700'
           }`}
         >
           {testing ? (
@@ -301,10 +301,10 @@ export function TranscriptionSettings({
             </>
           )}
         </button>
-        {testing && <p className="text-center text-[11px] text-neutral-500">Listening — say a few words…</p>}
-        {testResult && <p className="text-[11px] leading-snug text-neutral-700">Heard: "{testResult}"</p>}
-        {testError && <p className="text-[11px] leading-snug text-red-600">{testError}</p>}
-        <p className="text-[11px] leading-snug text-neutral-500">
+        {testing && <p className="text-center text-[11px] text-[var(--text-mid)]">Listening — say a few words…</p>}
+        {testResult && <p className="text-[11px] leading-snug text-[var(--text-hi)]">Heard: "{testResult}"</p>}
+        {testError && <p className="text-[11px] leading-snug text-[var(--danger)]">{testError}</p>}
+        <p className="text-[11px] leading-snug text-[var(--text-mid)]">
           Runs a real ~8-second transcription through whichever engine is configured above —
           confirms the mic, the engine, and (if downloaded) the offline model all actually work.
         </p>
@@ -317,7 +317,7 @@ export function TranscriptionSettings({
         hint="If AssemblyAI becomes unreachable mid-call — outage, invalid key, no internet — Sarathi switches that audio source to the local model (once downloaded) for the rest of the call and tells you it did. Turn this off to only ever use AssemblyAI."
       />
       {!settings.sttFallbackToLocal && settings.sttEngine === 'assemblyai' && (
-        <p className="flex items-start gap-1.5 text-[11px] leading-snug text-amber-700">
+        <p className="flex items-start gap-1.5 text-[11px] leading-snug text-[var(--warning)]">
           <CloudOff size={12} className="mt-0.5 shrink-0" />
           No fallback. If AssemblyAI becomes unreachable, that audio source won&apos;t be transcribed
           at all until it recovers.

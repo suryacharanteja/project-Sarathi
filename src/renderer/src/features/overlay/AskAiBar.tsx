@@ -24,22 +24,23 @@ export function AskAiBar(): React.JSX.Element {
   }
 
   return (
-    <div className="border-t border-white/10 p-2">
-      {error && <p className="mb-1.5 px-1 text-xs text-red-400">{error}</p>}
+    <div className="border-t border-[var(--bg-edge)] p-2">
+      {error && <p className="mb-1.5 px-1 text-xs text-[var(--danger)]">{error}</p>}
       <div className="flex items-center gap-2">
         <input
+          aria-label="Question for AI"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleAsk()
           }}
           placeholder="Type a question to test Ask AI…"
-          className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 outline-none focus:border-white/25"
+          className="min-w-0 flex-1 rounded-lg border border-[var(--bg-edge)] bg-[var(--state-layer)] px-3 py-2 text-sm text-[var(--text-hi)] placeholder:text-[var(--text-mid)] outline-none focus:border-[var(--bg-edge)]"
         />
         <button
           onClick={handleAsk}
           disabled={asking || !question.trim()}
-          className="flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/25 disabled:opacity-40"
+          className="flex shrink-0 items-center whitespace-nowrap gap-1.5 rounded-lg bg-[var(--state-layer)] px-3 py-2 text-sm font-medium text-[var(--text-hi)] transition hover:bg-[var(--state-layer)] disabled:opacity-40"
         >
           {asking ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
           Ask AI

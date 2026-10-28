@@ -4,14 +4,14 @@ import { join } from 'path'
 import { type AppSettings, defaultAppSettings } from '../shared/ipc-contract'
 import { appSettingsSchema } from '../shared/schemas'
 
-const API_KEY_FIELDS: (keyof AppSettings)[] = [
+const API_KEY_FIELDS = [
   'geminiApiKey',
   'assemblyAiApiKey',
   'openaiApiKey',
   'openCodeGoApiKey',
   'openCodeZenApiKey',
   'deepseekApiKey'
-]
+] as const
 
 function settingsFilePath(): string {
   return join(app.getPath('userData'), 'Sarathi-settings.json')
@@ -26,7 +26,8 @@ function canEncrypt(): boolean {
 }
 
 function encryptValue(value: string | null): string | null {
-  if (!value || !canEncrypt()) return value
+  if (!value) return value
+  if (!canEncrypt()) throw new Error('Secure key storage is unavailable. Unlock your OS keychain and try saving again.')
   return safeStorage.encryptString(value).toString('base64')
 }
 

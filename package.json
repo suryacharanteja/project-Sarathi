@@ -9,7 +9,7 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json && tsc --noEmit -p tsconfig.tests.json",
     "test:stt": "node --test src/main/services/stt/endpointing.test.ts",
     "test:schemas": "node --import ./scripts/register-test-loader.mjs --test src/shared/schemas.test.ts",
     "test:pptx": "node --import ./scripts/register-test-loader.mjs --test src/main/documents/extract-pptx.test.ts",

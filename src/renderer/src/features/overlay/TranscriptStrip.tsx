@@ -1,26 +1,22 @@
 ﻿import { useEffect, useRef } from 'react'
-import { Ear, Home, Mic, MicOff, Minus, Radio, Sparkles, X } from 'lucide-react'
+import { Ear, MessageCircleQuestion, Mic, MicOff, PanelRightClose, Radio, Sparkles } from 'lucide-react'
 import { useOverlayStore } from '../../stores/overlay-store'
 import { Tooltip } from '../../components/ui/tooltip'
 
 export function TranscriptStrip({
   micOn,
   onToggleMic,
-  onHome,
-  onMinimize,
-  onClose,
   systemAudioIssue,
   manualCaptureArmed,
-  onToggleManualCapture
+  onToggleManualCapture,
+  onToggleCopilot
 }: {
   micOn: boolean
   onToggleMic: () => void
-  onHome: () => void
-  onMinimize: () => void
-  onClose: () => void
   systemAudioIssue: boolean
   manualCaptureArmed: boolean
   onToggleManualCapture: () => void
+  onToggleCopilot: () => void
 }): React.JSX.Element {
   const transcript = useOverlayStore((s) => s.transcript)
   const partialText = useOverlayStore((s) => s.partialText)
@@ -52,27 +48,27 @@ export function TranscriptStrip({
 
   return (
     <div
-      className="flex items-center gap-3 border-b border-white/10 bg-black/40 px-3 py-2"
+      className="flex shrink-0 flex-wrap items-center gap-2 border-b border-[var(--bg-edge)] bg-[var(--state-layer)] px-3 py-2"
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
-      <Tooltip label={systemAudioIssue ? 'System audio: connected but no sound detected' : `System audio: ${sttStatus.system}`}>
-        <div className="flex items-center gap-1.5 text-neutral-400">
+      <Tooltip label={systemAudioIssue ? 'System audio is unavailable or no sound was detected' : `System audio: ${sttStatus.system}`}>
+        <div className="flex items-center gap-1.5 text-[var(--text-mid)]">
           <Radio
-            size={14}
-            className={systemAudioIssue ? 'text-amber-400' : isListening ? 'text-emerald-400' : undefined}
+            size={20}
+            className={systemAudioIssue ? 'text-[var(--warning)]' : isListening ? 'text-[var(--positive)]' : undefined}
           />
         </div>
       </Tooltip>
 
       <div
         ref={scrollRef}
-        className="min-w-0 flex-1 overflow-y-hidden text-sm leading-snug text-neutral-300"
-        style={{ maxHeight: '2.8em' } as React.CSSProperties}
+        className="min-w-0 flex-1 overflow-hidden text-sm leading-snug text-[var(--text-hi)]"
+        style={{ flexBasis: 'calc(100% - 40px)', maxHeight: '2.8em' } as React.CSSProperties}
       >
         <span className="opacity-80">
           {liveText ||
             (systemAudioIssue
-              ? 'No system audio detected…'
+              ? 'Audio unavailable — see details below'
               : isConnecting
                 ? 'Connecting…'
                 : isListening
@@ -82,11 +78,13 @@ export function TranscriptStrip({
       </div>
 
       {questionDetected && (
-        <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-400">
+        <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-[var(--positive)]">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
           Question detected
         </span>
       )}
+
+      <QuestionDetectionToggle />
 
       {/* Icon-only, matching the mic button below: color state + a Tooltip
           on hover is already the established, sufficient pattern in this
@@ -96,12 +94,13 @@ export function TranscriptStrip({
       <Tooltip label={autoAnswerOn ? 'Auto Answer: On — click to pause' : 'Auto Answer: Off — click to resume'}>
         <button
           onClick={() => setAutoAnswerOn(!autoAnswerOn)}
+          aria-label="Auto answer" aria-pressed={autoAnswerOn}
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-          className={`shrink-0 rounded-full p-1.5 transition ${
-            autoAnswerOn ? 'bg-white/15 text-white' : 'bg-white/5 text-neutral-500'
+          className={`icon-button transition ${
+            autoAnswerOn ? 'bg-[var(--state-layer)] text-[var(--text-hi)]' : 'bg-[var(--state-layer)] text-[var(--text-mid)]'
           }`}
         >
-          <Sparkles size={14} />
+          <Sparkles size={20} />
         </button>
       </Tooltip>
 
@@ -123,56 +122,62 @@ export function TranscriptStrip({
       >
         <button
           onClick={onToggleManualCapture}
+          aria-label="Capture a question" aria-pressed={manualCaptureArmed}
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-          className={`shrink-0 rounded-full p-1.5 transition ${
-            manualCaptureArmed ? 'animate-pulse bg-amber-500/25 text-amber-300' : 'bg-white/5 text-neutral-500'
+          className={`icon-button transition ${
+            manualCaptureArmed ? 'animate-pulse bg-amber-500/25 text-[var(--warning)]' : 'bg-[var(--state-layer)] text-[var(--text-mid)]'
           }`}
         >
-          <Ear size={14} />
+          <Ear size={20} />
         </button>
       </Tooltip>
 
       <Tooltip label={micOn ? 'Mic on — click to mute' : 'Mic off — click to enable'}>
         <button
           onClick={onToggleMic}
+          aria-label="Microphone" aria-pressed={micOn}
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-          className={`shrink-0 rounded-full p-1.5 transition ${
-            micOn ? 'bg-white/15 text-emerald-400' : 'bg-white/5 text-neutral-500'
+          className={`icon-button transition ${
+            micOn ? 'bg-[var(--state-layer)] text-[var(--positive)]' : 'bg-[var(--state-layer)] text-[var(--text-mid)]'
           }`}
         >
-          {micOn ? <Mic size={14} /> : <MicOff size={14} />}
+          {micOn ? <Mic size={20} /> : <MicOff size={20} />}
         </button>
       </Tooltip>
 
-      <div
-        className="flex shrink-0 items-center gap-0.5 border-l border-white/10 pl-2"
-        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-      >
-        <Tooltip label="Back to home">
-          <button
-            onClick={onHome}
-            className="rounded-full p-1.5 text-neutral-400 transition hover:bg-white/10 hover:text-white"
-          >
-            <Home size={14} />
-          </button>
-        </Tooltip>
-        <Tooltip label="Minimize to bubble">
-          <button
-            onClick={onMinimize}
-            className="rounded-full p-1.5 text-neutral-400 transition hover:bg-white/10 hover:text-white"
-          >
-            <Minus size={14} />
-          </button>
-        </Tooltip>
-        <Tooltip label="Close Sarathi">
-          <button
-            onClick={onClose}
-            className="rounded-full p-1.5 text-neutral-400 transition hover:bg-red-500/20 hover:text-red-400"
-          >
-            <X size={14} />
-          </button>
-        </Tooltip>
-      </div>
+      <Tooltip label="Minimize co-pilot panel">
+        <button
+          type="button"
+          onClick={onToggleCopilot}
+          aria-label="Minimize co-pilot"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+          className="icon-button"
+        >
+          <PanelRightClose size={20} />
+        </button>
+      </Tooltip>
+
     </div>
+  )
+}
+
+export function QuestionDetectionToggle(): React.JSX.Element {
+  const questionDetectionOn = useOverlayStore((s) => s.questionDetectionOn)
+  const setQuestionDetectionOn = useOverlayStore((s) => s.setQuestionDetectionOn)
+
+  return (
+    <Tooltip label={questionDetectionOn ? 'Question detection: On — click to turn off' : 'Question detection: Off — click to turn on'}>
+      <button
+        type="button"
+        onClick={() => setQuestionDetectionOn(!questionDetectionOn)}
+        aria-label="Question detection"
+        aria-pressed={questionDetectionOn}
+        className={`icon-button transition ${
+          questionDetectionOn ? 'bg-[var(--state-layer)] text-[var(--positive)]' : 'bg-[var(--state-layer)] text-[var(--text-mid)]'
+        }`}
+      >
+        <MessageCircleQuestion size={20} aria-hidden="true" />
+      </button>
+    </Tooltip>
   )
 }

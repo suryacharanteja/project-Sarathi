@@ -32,7 +32,7 @@ export function Tooltip({
       {visible && (
         <span
           role="tooltip"
-          className={`pointer-events-none absolute left-1/2 z-50 w-max max-w-[220px] -translate-x-1/2 rounded-md border border-white/10 bg-neutral-950/95 px-2 py-1 text-[10px] leading-snug text-neutral-200 shadow-xl ${
+          className={`pointer-events-none absolute left-1/2 z-50 w-max max-w-[220px] -translate-x-1/2 rounded-md border border-[var(--bg-edge)] bg-[var(--bg-surface)] px-2 py-1 text-[10px] leading-snug text-[var(--text-hi)] shadow-xl ${
             side === 'bottom' ? 'top-full mt-1.5' : 'bottom-full mb-1.5'
           }`}
         >

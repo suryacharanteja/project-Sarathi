@@ -16,28 +16,36 @@
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
-/* Design tokens — see docs/FRD.md FR-10. Dark values are the overlay theme;
-   the setup screen (light glass) overrides the subset it uses via
-   [data-theme="light"] on its root container. */
-:root {
-  --bg-base: #0a0a0f;
-  --bg-surface: #13131a;
-  --bg-edge: rgba(255, 255, 255, 0.06);
-  --accent: #6366f1;
-  --accent-dim: #4f46e5;
-  --positive: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --text-hi: #f5f5f5;
-  --text-mid: #a3a3a3;
-  --text-lo: #525252;
+/* Material-inspired semantic roles shared by all application surfaces. */
+:root, [data-theme='light'] {
+  --bg-base: #f7f8fc;
+  --bg-surface: #ffffff;
+  --bg-edge: #c7ccd9;
+  --state-layer: #e9ecf4;
+  --accent: #4338ca;
+  --accent-dim: #3730a3;
+  --accent-container: #e8e5ff;
+  --positive: #08764f;
+  --warning: #875400;
+  --danger: #b42334;
+  --text-hi: #1b2030;
+  --text-mid: #535e73;
+  --text-lo: #626d80;
 }
-
-[data-theme='light'] {
-  --bg-base: rgba(255, 255, 255, 0.92);
-  --bg-surface: rgba(255, 255, 255, 0.7);
-  --accent: #6366f1;
-  --text-hi: #111827;
+[data-theme='dark'] {
+  --bg-base: #131620;
+  --bg-surface: #1d2230;
+  --bg-edge: #49536a;
+  --state-layer: #2c3446;
+  --accent: #c0baff;
+  --accent-dim: #a59bff;
+  --accent-container: #363057;
+  --positive: #70deb1;
+  --warning: #f4c579;
+  --danger: #ffabb5;
+  --text-hi: #eef0fa;
+  --text-mid: #bbc4d8;
+  --text-lo: #a5afc4;
 }
 
 /* FR-10 elevation system — a reusable depth scale instead of each
@@ -55,7 +63,7 @@
 }
 .elevation-2 {
   background: var(--bg-surface);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--bg-edge);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
 }
 /* Level 3's blur is applied via inline style (see components using it),
@@ -80,4 +88,28 @@
 * {
   cursor: default !important;
   user-select: none;
+}
+
+body { margin: 0; color: var(--text-hi); font-family: var(--font-sans); }
+.icon-button {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%;
+  color: var(--text-mid); transition: background-color 150ms, color 150ms;
+  -webkit-app-region: no-drag;
+}
+.icon-button:hover { background: var(--state-layer); color: var(--text-hi); }
+.icon-button:active { background: var(--accent-container); }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 3px;
+}
+button:disabled { opacity: .5; }
+input, textarea { user-select: text; }
+input[type='range'] { min-height: 32px; accent-color: var(--accent); }
+.persona-button { min-height: 64px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+@media (max-width: 640px) {
+  [data-screen='presentation'] { flex-direction: column; }
+  [data-panel='copilot'] { width: 100%; max-height: 38%; border-top: 1px solid var(--bg-edge); }
 }

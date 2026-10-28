@@ -18,12 +18,40 @@ const CANDIDATE_PATHS = [
 ]
 
 let cachedSofficePath: string | null = null
+const SOFFICE_PROBE_TIMEOUT_MS = 3000
+const SOFFICE_CONVERSION_TIMEOUT_MS = 60000
+
+function settleProcessTimeout(
+  proc: ReturnType<typeof spawn>,
+  timeoutMs: number,
+  onTimeout: () => void
+): () => void {
+  let settled = false
+  const timer = setTimeout(() => {
+    if (settled) return
+    settled = true
+    proc.kill()
+    onTimeout()
+  }, timeoutMs)
+  return () => {
+    if (settled) return
+    settled = true
+    clearTimeout(timer)
+  }
+}
 
 function commandExistsOnPath(command: string): Promise<boolean> {
   return new Promise((resolve) => {
     const probe = spawn(command, ['--version'], { stdio: 'ignore' })
-    probe.on('error', () => resolve(false))
-    probe.on('close', (code) => resolve(code === 0))
+    const complete = settleProcessTimeout(probe, SOFFICE_PROBE_TIMEOUT_MS, () => resolve(false))
+    probe.on('error', () => {
+      complete()
+      resolve(false)
+    })
+    probe.on('close', (code) => {
+      complete()
+      resolve(code === 0)
+    })
   })
 }
 
@@ -69,13 +97,18 @@ export async function convertToPdf(filePath: string): Promise<{ pdfPath?: string
   return new Promise((resolve) => {
     const proc = spawn(soffice, ['--headless', '--convert-to', 'pdf', '--outdir', outDir, filePath])
     let stderr = ''
+    const complete = settleProcessTimeout(proc, SOFFICE_CONVERSION_TIMEOUT_MS, () => {
+      resolve({ error: 'LibreOffice conversion timed out.' })
+    })
     proc.stderr?.on('data', (chunk: Buffer) => {
       stderr += chunk.toString()
     })
     proc.on('error', (error) => {
+      complete()
       resolve({ error: `Failed to launch LibreOffice: ${error.message}` })
     })
     proc.on('close', (code) => {
+      complete()
       if (code !== 0) {
         resolve({ error: `LibreOffice conversion failed (exit code ${code}).${stderr ? ` ${stderr.trim()}` : ''}` })
         return

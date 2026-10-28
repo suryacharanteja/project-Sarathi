@@ -352,14 +352,14 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
                 value={questionDraft}
                 onChange={(e) => setQuestionDraft(e.target.value)}
                 rows={2}
-                className="w-full rounded-md border border-white/15 bg-black/30 p-1.5 text-sm text-neutral-200 outline-none focus:border-white/30"
+                className="w-full rounded-md border border-[var(--bg-edge)] bg-[var(--state-layer)] p-1.5 text-sm text-[var(--text-hi)] outline-none focus:border-[var(--bg-edge)]"
                 autoFocus
               />
               <div className="flex gap-1.5">
                 <button
                   onClick={handleReAsk}
                   disabled={busy || !questionDraft.trim()}
-                  className="rounded-md bg-white/15 px-2 py-1 text-xs font-medium text-white transition hover:bg-white/25 disabled:opacity-40"
+                  className="rounded-md bg-[var(--state-layer)] px-2 py-1 text-xs font-medium text-[var(--text-hi)] transition hover:bg-[var(--state-layer)] disabled:opacity-40"
                 >
                   Re-ask
                 </button>
@@ -368,7 +368,7 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
                     setQuestionDraft(card.question)
                     setEditingQuestion(false)
                   }}
-                  className="rounded-md px-2 py-1 text-xs text-neutral-400 hover:text-neutral-200"
+                  className="rounded-md px-2 py-1 text-xs text-[var(--text-mid)] hover:text-[var(--text-hi)]"
                 >
                   Cancel
                 </button>
@@ -376,7 +376,7 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
             </div>
           ) : (
             <div className="space-y-1">
-              <p className="text-sm text-neutral-300">{card.question}</p>
+              <p className="text-sm text-[var(--text-hi)]">{card.question}</p>
               {card.questionType && (
                 // Purely informational — no onClick, no button, no hover
                 // affordance. All framework selection happens ahead of time
@@ -384,10 +384,10 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
                 // exactly the mouse movement this app's shortcut system
                 // exists to avoid.
                 <Tooltip label={`Answered using the ${QUESTION_TYPE_FRAMEWORK_NAMES[card.questionType]} framework`}>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-medium text-neutral-400">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[var(--state-layer)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-mid)]">
                     {QUESTION_TYPE_ICONS[card.questionType]}
                     {QUESTION_TYPE_LABELS[card.questionType]}
-                    <span className="text-neutral-600">{QUESTION_TYPE_FRAMEWORK_NAMES[card.questionType]}</span>
+                    <span className="text-[var(--text-mid)]">{QUESTION_TYPE_FRAMEWORK_NAMES[card.questionType]}</span>
                   </span>
                 </Tooltip>
               )}
@@ -396,7 +396,7 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
                 // — visible, per-answer proof "Match my speaking style"
                 // actually applied, closing the "I can't validate this" gap.
                 <Tooltip label="Written using your learned speaking style">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-medium text-neutral-400">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[var(--state-layer)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-mid)]">
                     <Mic size={10} />
                     Styled
                   </span>
@@ -421,8 +421,8 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
                     disabled={busy || (!systemReady && !reCaptureArmedForThisCard)}
                     className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium transition disabled:opacity-40 ${
                       reCaptureArmedForThisCard
-                        ? 'bg-red-500/20 text-red-300'
-                        : 'bg-white/5 text-neutral-400 hover:bg-white/15 hover:text-neutral-200'
+                        ? 'bg-red-500/20 text-[var(--danger)]'
+                        : 'bg-[var(--state-layer)] text-[var(--text-mid)] hover:bg-[var(--state-layer)] hover:text-[var(--text-hi)]'
                     }`}
                   >
                     {reCaptureArmedForThisCard ? (
@@ -435,7 +435,7 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
                       <>
                         <Repeat size={10} />
                         Re-listen
-                        <span className="text-neutral-600">Ctrl+Plus+R</span>
+                        <span className="text-[var(--text-mid)]">Ctrl+Plus+R</span>
                       </>
                     )}
                   </button>
@@ -448,7 +448,7 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
                       setQuestionDraft(card.question)
                       setEditingQuestion(true)
                     }}
-                    className="text-[10px] text-neutral-600 underline decoration-dotted transition hover:text-neutral-400"
+                    className="text-[10px] text-[var(--text-mid)] underline decoration-dotted transition hover:text-[var(--text-mid)]"
                   >
                     Edit manually
                   </button>
@@ -460,9 +460,9 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
         <Tooltip label="Copy answer">
           <button
             onClick={handleCopy}
-            className="ml-2 shrink-0 rounded-md p-1.5 text-neutral-500 transition hover:bg-white/10 hover:text-neutral-300"
+            className="ml-2 shrink-0 rounded-md p-1.5 text-[var(--text-mid)] transition hover:bg-[var(--state-layer)] hover:text-[var(--text-hi)]"
           >
-            {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+            {copied ? <Check size={14} className="text-[var(--positive)]" /> : <Copy size={14} />}
           </button>
         </Tooltip>
       </div>
@@ -470,7 +470,7 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
       <AnswerBodyView body={card} />
 
       {card.status === 'streaming' && (
-        <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+        <div className="flex items-center gap-1.5 text-xs text-[var(--text-mid)]">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-neutral-400" />
           Streaming...
         </div>
@@ -485,13 +485,13 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
           row vanishes with no indicator that a query is still being
           recorded, which was part of the "screenshot disappeared" bug. */}
       {(stagedScreenshots.length > 0 || screenshotQueryArmedForThisCard) && (
-        <div className="flex flex-wrap items-center gap-1.5 border-t border-white/10 pt-3">
+        <div className="flex flex-wrap items-center gap-1.5 border-t border-[var(--bg-edge)] pt-3">
           {screenshotQueryArmedForThisCard ? (
             <Tooltip label="Listening — click Query again to send the screenshot with what you say">
               <button
                 onClick={toggleScreenshotQuery}
                 disabled={busy}
-                className="flex items-center gap-1 rounded-full bg-red-500/20 px-2.5 py-1 text-xs text-red-300 transition disabled:opacity-40"
+                className="flex items-center gap-1 rounded-full bg-red-500/20 px-2.5 py-1 text-xs text-[var(--danger)] transition disabled:opacity-40"
               >
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
                 Listening…
@@ -504,11 +504,11 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
                   <img
                     src={dataUrl}
                     alt={`Staged screenshot ${i + 1}`}
-                    className="h-12 w-16 rounded border border-white/10 object-cover"
+                    className="h-12 w-16 rounded border border-[var(--bg-edge)] object-cover"
                   />
                   <button
                     onClick={() => removeStagedScreenshot(i)}
-                    className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-neutral-900 text-neutral-300 hover:bg-red-500/40 hover:text-red-200"
+                    className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--bg-surface)] text-[var(--text-hi)] hover:bg-red-500/40 hover:text-[var(--danger)]"
                   >
                     <X size={10} />
                   </button>
@@ -518,7 +518,7 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
                 <button
                   onClick={handleSendScreenshots}
                   disabled={busy}
-                  className="flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-1 text-xs text-emerald-300 transition hover:bg-emerald-500/30 disabled:opacity-40"
+                  className="flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-1 text-xs text-[var(--positive)] transition hover:bg-emerald-500/30 disabled:opacity-40"
                 >
                   <Check size={11} />
                   Send {stagedScreenshots.length}
@@ -540,7 +540,7 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
                 <button
                   onClick={toggleScreenshotQuery}
                   disabled={busy}
-                  className="flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-1 text-xs text-neutral-300 transition hover:bg-white/15 disabled:opacity-40"
+                  className="flex items-center gap-1 rounded-full bg-[var(--state-layer)] px-2.5 py-1 text-xs text-[var(--text-hi)] transition hover:bg-[var(--state-layer)] disabled:opacity-40"
                 >
                   <Mic size={11} />
                   Query
@@ -552,7 +552,7 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
       )}
 
       {card.status !== 'streaming' && (
-        <div className="flex flex-wrap items-center gap-1.5 border-t border-white/10 pt-3">
+        <div className="flex flex-wrap items-center gap-1.5 border-t border-[var(--bg-edge)] pt-3">
           {FOLLOW_UP_CHIPS.slice(0, 2).map((chip) => (
             // No Tooltip here — the shortcut hint is already shown inline
             // (the trailing <span>), so a hover tooltip would be redundant.
@@ -560,11 +560,11 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
               key={chip.label}
               onClick={() => sendFollowUp(resolveInstruction(chip.instruction, card.questionType))}
               disabled={busy}
-              className="flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-1 text-xs text-neutral-300 transition hover:bg-white/15 disabled:opacity-40"
+              className="flex items-center gap-1 rounded-full bg-[var(--state-layer)] px-2.5 py-1 text-xs text-[var(--text-hi)] transition hover:bg-[var(--state-layer)] disabled:opacity-40"
             >
               <Plus size={11} />
               {chip.label}
-              <span className="text-[10px] text-neutral-600">{chip.hint}</span>
+              <span className="text-[10px] text-[var(--text-mid)]">{chip.hint}</span>
             </button>
           ))}
           {/* Takes the exact slot and shortcut "+ More detail" used to occupy
@@ -585,8 +585,8 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
               disabled={busy}
               className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs transition disabled:opacity-40 ${
                 interviewerQuestionArmedForThisCard
-                  ? 'bg-red-500/20 text-red-300'
-                  : 'bg-white/5 text-neutral-300 hover:bg-white/15'
+                  ? 'bg-red-500/20 text-[var(--danger)]'
+                  : 'bg-[var(--state-layer)] text-[var(--text-hi)] hover:bg-[var(--state-layer)]'
               }`}
             >
               {interviewerQuestionArmedForThisCard ? (
@@ -598,7 +598,7 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
                 <>
                   <Plus size={11} />
                   + Question
-                  <span className="text-[10px] text-neutral-600">Ctrl+Plus+Q</span>
+                  <span className="text-[10px] text-[var(--text-mid)]">Ctrl+Plus+Q</span>
                 </>
               )}
             </button>
@@ -608,22 +608,22 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
               key={chip.label}
               onClick={() => sendFollowUp(resolveInstruction(chip.instruction, card.questionType))}
               disabled={busy}
-              className="flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-1 text-xs text-neutral-300 transition hover:bg-white/15 disabled:opacity-40"
+              className="flex items-center gap-1 rounded-full bg-[var(--state-layer)] px-2.5 py-1 text-xs text-[var(--text-hi)] transition hover:bg-[var(--state-layer)] disabled:opacity-40"
             >
               <Plus size={11} />
               {chip.label}
-              <span className="text-[10px] text-neutral-600">{chip.hint}</span>
+              <span className="text-[10px] text-[var(--text-mid)]">{chip.hint}</span>
             </button>
           ))}
           <Tooltip label="Capture the screen and stage it as context for this question — click again to add more (e.g. after scrolling), then Send (Ctrl+Plus+X)">
             <button
               onClick={handleScreenshot}
               disabled={busy}
-              className="flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-1 text-xs text-neutral-300 transition hover:bg-white/15 disabled:opacity-40"
+              className="flex items-center gap-1 rounded-full bg-[var(--state-layer)] px-2.5 py-1 text-xs text-[var(--text-hi)] transition hover:bg-[var(--state-layer)] disabled:opacity-40"
             >
               <Camera size={11} />
               Screenshot{stagedScreenshots.length > 0 ? ` (${stagedScreenshots.length})` : ''}
-              <span className="text-[10px] text-neutral-600">Ctrl+Plus+X</span>
+              <span className="text-[10px] text-[var(--text-mid)]">Ctrl+Plus+X</span>
             </button>
           </Tooltip>
           <Tooltip
@@ -640,8 +640,8 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
               disabled={busy}
               className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs transition disabled:opacity-40 ${
                 voiceArmedForThisCard
-                  ? 'bg-red-500/20 text-red-300'
-                  : 'bg-white/5 text-neutral-300 hover:bg-white/15'
+                  ? 'bg-red-500/20 text-[var(--danger)]'
+                  : 'bg-[var(--state-layer)] text-[var(--text-hi)] hover:bg-[var(--state-layer)]'
               }`}
             >
               {voiceArmedForThisCard ? (
@@ -654,7 +654,7 @@ export function AnswerCardView({ card }: { card: AnswerCard }): React.JSX.Elemen
                 <>
                   <Mic size={11} />
                   Speak
-                  <span className="text-[10px] text-neutral-600">Ctrl+Plus+S</span>
+                  <span className="text-[10px] text-[var(--text-mid)]">Ctrl+Plus+S</span>
                 </>
               )}
             </button>
@@ -689,7 +689,7 @@ function AnswerBodyView({ body }: { body: AnswerBody }): React.JSX.Element {
 
       {body.keySteps && body.keySteps.length > 0 && (
         <Section icon={<ListChecks size={14} />} label="Key Steps">
-          <ol className="list-decimal space-y-1 pl-5 text-sm text-neutral-200">
+          <ol className="list-decimal space-y-1 pl-5 text-sm text-[var(--text-hi)]">
             {body.keySteps.map((step, i) => (
               <li key={i}>{step}</li>
             ))}
@@ -699,7 +699,7 @@ function AnswerBodyView({ body }: { body: AnswerBody }): React.JSX.Element {
 
       {body.code && (
         <Section icon={<Code2 size={14} />} label="Code">
-          <pre className="overflow-x-auto rounded-lg bg-black/60 p-3 font-mono text-xs leading-relaxed text-emerald-200">
+          <pre className="overflow-x-auto rounded-lg bg-[var(--state-layer)] p-3 font-mono text-xs leading-relaxed text-[var(--positive)]">
             <code>{body.code.content}</code>
           </pre>
         </Section>
@@ -712,7 +712,7 @@ function AnswerBodyView({ body }: { body: AnswerBody }): React.JSX.Element {
       )}
 
       {(body.timeComplexity || body.spaceComplexity) && (
-        <div className="flex gap-4 text-xs text-neutral-400">
+        <div className="flex gap-4 text-xs text-[var(--text-mid)]">
           {body.timeComplexity && (
             <span className="flex items-center gap-1">
               <Clock size={12} /> Time: {body.timeComplexity}
@@ -732,8 +732,8 @@ function AnswerBodyView({ body }: { body: AnswerBody }): React.JSX.Element {
 function FollowUpBlock({ entry }: { entry: FollowUpEntry }): React.JSX.Element {
   const isError = entry.answer.startsWith('⚠️')
   return (
-    <div className="space-y-2 rounded-lg border border-white/10 bg-white/[0.03] p-3">
-      <p className="text-xs font-medium text-neutral-400">↳ {entry.instruction}</p>
+    <div className="space-y-2 rounded-lg border border-[var(--bg-edge)] bg-[var(--state-layer)] p-3">
+      <p className="text-xs font-medium text-[var(--text-mid)]">↳ {entry.instruction}</p>
       {entry.imageDataUrls && entry.imageDataUrls.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {entry.imageDataUrls.map((url, i) => (
@@ -741,13 +741,13 @@ function FollowUpBlock({ entry }: { entry: FollowUpEntry }): React.JSX.Element {
               key={i}
               src={url}
               alt={`Attached screenshot ${i + 1}`}
-              className="max-h-24 w-auto rounded border border-white/10 object-contain"
+              className="max-h-24 w-auto rounded border border-[var(--bg-edge)] object-contain"
             />
           ))}
         </div>
       )}
       {isError ? (
-        <p className="text-xs text-red-400">{entry.answer}</p>
+        <p className="text-xs text-[var(--danger)]">{entry.answer}</p>
       ) : (
         <AnswerBodyView body={entry} />
       )}
@@ -764,8 +764,8 @@ function PendingFollowUpBlock({
 }): React.JSX.Element {
   const isError = pending.answer.startsWith('⚠️')
   return (
-    <div className="space-y-2 rounded-lg border border-white/10 bg-white/[0.03] p-3">
-      <p className="text-xs font-medium text-neutral-400">↳ {pending.instruction}</p>
+    <div className="space-y-2 rounded-lg border border-[var(--bg-edge)] bg-[var(--state-layer)] p-3">
+      <p className="text-xs font-medium text-[var(--text-mid)]">↳ {pending.instruction}</p>
       {pending.imageDataUrls && pending.imageDataUrls.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {pending.imageDataUrls.map((url, i) => (
@@ -773,18 +773,18 @@ function PendingFollowUpBlock({
               key={i}
               src={url}
               alt={`Attached screenshot ${i + 1}`}
-              className="max-h-24 w-auto rounded border border-white/10 object-contain"
+              className="max-h-24 w-auto rounded border border-[var(--bg-edge)] object-contain"
             />
           ))}
         </div>
       )}
       {isError ? (
-        <p className="text-xs text-red-400">{pending.answer}</p>
+        <p className="text-xs text-[var(--danger)]">{pending.answer}</p>
       ) : (
         <>
           <AnswerBodyView body={pending} />
           {busy && (
-            <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+            <div className="flex items-center gap-1.5 text-xs text-[var(--text-mid)]">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-neutral-400" />
               Adding...
             </div>
@@ -806,7 +806,7 @@ function Section({
 }): React.JSX.Element {
   return (
     <div>
-      <div className="mb-1 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-neutral-500">
+      <div className="mb-1 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-[var(--text-mid)]">
         {icon}
         {label}
       </div>

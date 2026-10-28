@@ -1,5 +1,6 @@
 const SHORTCUTS: { keys: string; action: string; mode: string }[] = [
   { keys: 'Space', action: 'Pause / resume scroll', mode: 'Teleprompter / Doc' },
+  { keys: '↑ / ↓', action: 'Pause and scroll manually', mode: 'Teleprompter / Doc' },
   { keys: '← / →', action: 'Previous / next slide or page', mode: 'Carousel / PDF' },
   { keys: '+ / =', action: 'Increase font size', mode: 'Text modes' },
   { keys: '-', action: 'Decrease font size', mode: 'Text modes' },
@@ -21,7 +22,7 @@ const SHORTCUTS: { keys: string; action: string; mode: string }[] = [
 export function ShortcutCheatsheet({ onClose }: { onClose: () => void }): React.JSX.Element {
   return (
     <div
-      className="elevation-3 cheatsheet-fade-in absolute inset-0 z-50 flex items-center justify-center bg-black/60"
+      className="elevation-3 cheatsheet-fade-in absolute inset-0 z-50 flex items-center justify-center bg-[var(--state-layer)]"
       // Inline, not a CSS class — see the .elevation-3 comment in index.css.
       style={{ backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}
       onClick={onClose}
@@ -37,19 +38,19 @@ export function ShortcutCheatsheet({ onClose }: { onClose: () => void }): React.
         className="elevation-2 cheatsheet-card-in max-h-[85%] w-[90%] max-w-lg overflow-y-auto rounded-xl p-4"
       >
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-neutral-200">Keyboard Shortcuts</h2>
-          <button onClick={onClose} className="rounded text-xs text-neutral-500 hover:text-neutral-300 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40">
+          <h2 className="text-sm font-semibold text-[var(--text-hi)]">Keyboard Shortcuts</h2>
+          <button onClick={onClose} className="rounded text-xs text-[var(--text-mid)] hover:text-[var(--text-hi)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40">
             Esc or ? to close
           </button>
         </div>
         <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
           {SHORTCUTS.map((s) => (
             <div key={s.keys + s.action} className="flex flex-col gap-0.5 text-xs">
-              <kbd className="w-fit rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono text-[10px] text-neutral-300">
+              <kbd className="w-fit rounded border border-[var(--bg-edge)] bg-[var(--state-layer)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--text-hi)]">
                 {s.keys}
               </kbd>
-              <span className="text-neutral-400">
-                {s.action} <span className="text-neutral-600">({s.mode})</span>
+              <span className="text-[var(--text-mid)]">
+                {s.action} <span className="text-[var(--text-mid)]">({s.mode})</span>
               </span>
             </div>
           ))}

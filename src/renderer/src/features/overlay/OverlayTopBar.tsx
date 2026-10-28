@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Home, Minus, X, Timer, Clock } from 'lucide-react'
+
+import { ThemeToggle } from '../../components/ui/theme-toggle'
 
 function formatElapsed(totalSeconds: number): string {
   const h = Math.floor(totalSeconds / 3600)
@@ -63,11 +65,11 @@ export function OverlayTopBar({
   const remainingSeconds = lessonDurationMinutes !== null ? lessonDurationMinutes * 60 - elapsed : null
   const isOvertime = remainingSeconds !== null && remainingSeconds < 0
   const isLessonWarning = remainingSeconds !== null && !isOvertime && remainingSeconds <= 300
-  const timerColorClass = isOvertime ? 'text-[var(--danger)]' : isLessonWarning ? 'text-[var(--warning)]' : 'text-neutral-600'
+  const timerColorClass = isOvertime ? 'text-[var(--danger)]' : isLessonWarning ? 'text-[var(--warning)]' : 'text-[var(--text-mid)]'
   const timerLabel =
     remainingSeconds !== null
-      ? `${isOvertime ? '⏰ +' : '⏳ '}${formatElapsed(Math.abs(remainingSeconds))}`
-      : `⏱ ${formatElapsed(elapsed)}`
+      ? `${isOvertime ? '+' : ''}${formatElapsed(Math.abs(remainingSeconds))}`
+      : formatElapsed(elapsed)
   const timerTitle =
     remainingSeconds !== null
       ? isOvertime
@@ -76,37 +78,40 @@ export function OverlayTopBar({
       : 'Session timer'
 
   return (
-    <div className="shrink-0 border-b border-white/10">
+    <div className="shrink-0 border-b border-[var(--bg-edge)]">
       <div className="flex items-center gap-2 px-3 py-1.5">
         <button
           onClick={onHome}
-          className="shrink-0 rounded text-xs text-neutral-500 hover:text-neutral-300 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
-          title="Back to setup"
+          className="icon-button"
+          aria-label="Back to setup" title="Back to setup"
         >
-          ← Setup
+          <Home size={18} aria-hidden="true" /><span className="sr-only">Back to setup</span>
         </button>
+        <ThemeToggle />
         {/* Negotiable info — shrinks/clips first so Setup/capture-toggle/
             minimize/close (below) never get pushed off-screen at the app's
             360px minimum width. min-w-0 is required: flex items refuse to
             shrink below their content's natural width otherwise. */}
-        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-          <span className="shrink-0 rounded bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">
+        <div className="hidden sm:flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+          <span className="shrink-0 rounded bg-[var(--state-layer)] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[var(--text-mid)]">
             {modeBadge}
           </span>
-          {counterText && <span className="shrink-0 text-xs text-neutral-500 select-none">{counterText}</span>}
+          {counterText && <span className="shrink-0 text-xs text-[var(--text-mid)] select-none">{counterText}</span>}
           <div className="flex-1" />
-          {pauseIndicator && <span className="shrink-0 text-xs text-neutral-600 select-none">{pauseIndicator}</span>}
+          {pauseIndicator && <span className="shrink-0 text-xs text-[var(--text-mid)] select-none">{pauseIndicator}</span>}
           <span className={`shrink-0 text-xs select-none ${timerColorClass}`} title={timerTitle}>
-            {timerLabel}
+            <Timer size={14} className="inline mr-1" aria-hidden="true" />{timerLabel}
           </span>
-          <span className="shrink-0 text-xs text-neutral-600 select-none" title="Current time">
-            🕐 {clock}
+          <span className="shrink-0 text-xs text-[var(--text-mid)] select-none" title="Current time">
+            <Clock size={14} className="inline mr-1" aria-hidden="true" />{clock}
           </span>
         </div>
         <button
           onClick={toggleCaptureVisibility}
-          className={`flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40 ${
-            visibleToCapture ? 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' : 'text-neutral-500 hover:text-neutral-300'
+          aria-label={visibleToCapture ? "Hide from screen capture" : "Show in screen capture"}
+          aria-pressed={visibleToCapture}
+          className={`flex min-h-12 shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[10px] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40 ${
+            visibleToCapture ? 'bg-amber-500/10 text-[var(--warning)] hover:bg-amber-500/20' : 'text-[var(--text-mid)] hover:text-[var(--text-hi)]'
           }`}
           title={
             visibleToCapture
@@ -118,11 +123,11 @@ export function OverlayTopBar({
           {visibleToCapture ? 'Visible' : 'Hidden'}
         </button>
         <div className="flex shrink-0 gap-1">
-          <button onClick={onMinimize} className="rounded px-2 py-0.5 text-xs text-neutral-500 hover:text-neutral-300 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40">—</button>
-          <button onClick={onClose} className="rounded px-2 py-0.5 text-xs text-neutral-500 hover:text-red-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)]/40">✕</button>
+          <button onClick={onMinimize} aria-label="Minimize to bubble" className="icon-button"><Minus size={20} /></button>
+          <button onClick={onClose} aria-label="Close Sarathi" className="icon-button"><X size={20} /></button>
         </div>
       </div>
-      <div className="h-1 w-full bg-white/5">
+      <div className="h-1 w-full bg-[var(--state-layer)]">
         <div
           className="h-full bg-[var(--accent)] transition-all duration-300"
           style={{ width: `${Math.min(100, Math.max(0, progress * 100))}%` }}

@@ -37,7 +37,7 @@ export function AnswerCardStack(): React.JSX.Element {
 
   if (cards.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center text-sm text-neutral-500">
+      <div className="flex flex-1 items-center justify-center text-sm text-[var(--text-mid)]">
         No answers yet. Ask AI or wait for auto-answer to trigger.
       </div>
     )
@@ -47,21 +47,21 @@ export function AnswerCardStack(): React.JSX.Element {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex items-center justify-between border-b border-white/10 px-3 py-1.5">
+      <div className="flex items-center justify-between border-b border-[var(--bg-edge)] px-3 py-1.5">
         <button
           onClick={prevCard}
           disabled={activeCardIndex === 0}
-          className="flex items-center gap-1 rounded-full bg-white/5 px-2 py-1 text-xs text-neutral-300 disabled:opacity-30"
+          className="flex items-center gap-1 rounded-full bg-[var(--state-layer)] px-2 py-1 text-xs text-[var(--text-hi)] disabled:opacity-30"
         >
           <ChevronLeft size={12} /> Ctrl+←
         </button>
-        <span className="text-xs text-neutral-500">
+        <span className="text-xs text-[var(--text-mid)]">
           {activeCardIndex + 1} / {cards.length}
         </span>
         <button
           onClick={nextCard}
           disabled={activeCardIndex === cards.length - 1}
-          className="flex items-center gap-1 rounded-full bg-white/5 px-2 py-1 text-xs text-neutral-300 disabled:opacity-30"
+          className="flex items-center gap-1 rounded-full bg-[var(--state-layer)] px-2 py-1 text-xs text-[var(--text-hi)] disabled:opacity-30"
         >
           Ctrl+→ <ChevronRight size={12} />
         </button>

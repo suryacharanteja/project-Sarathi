@@ -1,5 +1,6 @@
 ﻿import { Home, Minus, Move, X } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { ThemeToggle } from './theme-toggle'
 import { Tooltip } from './tooltip'
 import sarathiIcon from '../../assets/sarathi-icon.png'
 
@@ -22,13 +23,13 @@ export function TitleBar({
 }): React.JSX.Element {
   return (
     <div
-      className="flex items-center justify-between border-b border-black/10 px-3 py-2"
+      className="flex items-center justify-between border-b border-[var(--bg-edge)] px-3 py-2"
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
-      <div className="flex items-center gap-2 font-semibold text-neutral-900">
+      <div className="flex items-center gap-2 font-semibold text-[var(--text-hi)]">
         <Tooltip label="Drag anywhere on this bar to move the window">
           <span
-            className="flex items-center text-neutral-400"
+            className="flex items-center text-[var(--text-mid)]"
             style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
           >
             <Move size={14} />
@@ -39,13 +40,15 @@ export function TitleBar({
       </div>
       <div className="flex items-center gap-1" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
         {children}
+        <ThemeToggle />
         {onHome && (
           <Tooltip label="Back to home">
             <button
               onClick={onHome}
-              className="rounded-full p-1.5 text-neutral-500 transition hover:bg-black/5 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
+              aria-label="Back to home"
+              className="icon-button"
             >
-              <Home size={16} />
+              <Home size={20} />
             </button>
           </Tooltip>
         )}
@@ -53,9 +56,10 @@ export function TitleBar({
           <Tooltip label="Minimize to bubble">
             <button
               onClick={onMinimize}
-              className="rounded-full p-1.5 text-neutral-500 transition hover:bg-black/5 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
+              aria-label="Minimize to bubble"
+              className="icon-button"
             >
-              <Minus size={16} />
+              <Minus size={20} />
             </button>
           </Tooltip>
         )}
@@ -63,9 +67,10 @@ export function TitleBar({
           <Tooltip label="Close Sarathi">
             <button
               onClick={onClose}
-              className="rounded-full p-1.5 text-neutral-500 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)]/40"
+              aria-label="Close Sarathi"
+              className="icon-button"
             >
-              <X size={16} />
+              <X size={20} />
             </button>
           </Tooltip>
         )}

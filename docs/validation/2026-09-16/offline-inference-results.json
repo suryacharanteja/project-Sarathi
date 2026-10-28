@@ -1,0 +1,25 @@
+{
+  "date": "2026-09-16T06:01:52.337Z",
+  "model": "Xenova/whisper-small",
+  "modelCache": "D:\\AI\\project Sarathi\\cache\\offline-validation\\models",
+  "results": [
+    {
+      "name": "Fresh no-key router selects cached non-default model",
+      "status": "PASS"
+    },
+    {
+      "name": "Synthetic speech transcribed by native cached model",
+      "status": "PASS",
+      "transcript": "The project team will review the delivery schedule tomorrow morning. Please confirm the next meeting time.",
+      "elapsedMs": 3001
+    },
+    {
+      "name": "Same-session local backend stop/restart",
+      "status": "PASS"
+    },
+    {
+      "name": "Real Retry button recovers same session into cached local engine",
+      "status": "PASS"
+    }
+  ]
+}

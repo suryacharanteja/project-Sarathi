@@ -121,10 +121,13 @@ Stored in `prompter-store.ts` as `slides: Slide[]`.
 - Pages are lazy-rendered on demand (render current ± 1 page)
 
 **Overlay — PdfViewerPanel:**
-- `<canvas>` element displays the current page, scaled to fill the panel width
+- `<canvas>` element displays the current page, fitted to the available viewer area without clipping or unnecessary whitespace
 - Navigation: ← Previous page | Page 4/22 | Next page →
 - Keyboard: ArrowLeft / ArrowRight
-- Zoom: +/- keys (scale factor 0.5 – 2.0)
+- Zoom: controls and +/- keys (scale factor 0.25–4.0); manual zoom exits fit mode until Fit page is selected
+- Fit page recalculates on viewer resize and page changes
+- Canvas backing resolution uses device pixel ratio, capped at 2x, while CSS dimensions remain in logical pixels
+- Pages are lazy-rendered on demand (render current ± 1 page)
 
 **New IPC channel:**
 ```typescript
@@ -183,6 +186,7 @@ getDocumentFilePath: 'document:getFilePath'  // returns { filePath: string }
 | Key | Action | Mode |
 |---|---|---|
 | Space | Pause / Resume scroll | Teleprompter |
+| ↑ / ↓ | Pause auto-scroll and move up / down manually | Teleprompter, Doc |
 | ← / → | Previous / Next slide or page | Carousel, PDF |
 | + / = | Increase font size by 2px | All |
 | - | Decrease font size by 2px | All |
@@ -193,6 +197,8 @@ getDocumentFilePath: 'document:getFilePath'  // returns { filePath: string }
 | Ctrl+Alt+A | Manual capture (existing) | All |
 
 **Cheatsheet:** A semi-transparent card (`bg-neutral-900/90`) that floats over the content panel when `?` is pressed. Lists all shortcuts in a two-column grid. Dismissed by pressing `?` again or Escape.
+
+Teleprompter and document modes also expose visible scroll-up, pause/resume, and scroll-down controls. Each manual step moves approximately three-quarters of the viewer height and pauses auto-scroll. Wheel or touch scrolling pauses auto-scroll as well.
 
 ---
 
@@ -279,6 +285,17 @@ text:       #111827
 **Current bug:** `OverlayHUD.tsx` reads `useOverlayStore((s) => s.answerCards)` but the store field is named `cards`.
 
 **Fix:** Change `s.answerCards` → `s.cards` in `OverlayHUD.tsx`.
+
+---
+
+### FR-12: Co-pilot Visibility and Question Detection
+
+- Start with the co-pilot panel collapsed when there are no answer cards or actionable transcription errors, preserving the presentation area for the script.
+- Automatically expand the panel when a new answer arrives or an actionable transcription error needs attention.
+- Keep a compact collapsed rail with controls to reopen the co-pilot and independently turn audience question detection on or off.
+- Provide the same question-detection toggle while the co-pilot panel is expanded.
+- Disabling question detection stops pending and future automatic question detection, but does not stop transcription or explicit manual question capture.
+- The setup screen's Audience question detection setting initializes both detection and auto-answer for the new session. In-session auto-answer can still be paused independently.
 
 ---
 

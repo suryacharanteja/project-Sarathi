@@ -179,6 +179,13 @@ export function useLiveTranscription() {
       }
     }
 
+    const unsubQuestionDetection = useOverlayStore.subscribe((state, prev) => {
+      if (!state.questionDetectionOn && prev.questionDetectionOn) {
+        clearSilenceTimer()
+        bufferRef.current = []
+      }
+    })
+
     function armSilenceTimer(ms: number): void {
       clearSilenceTimer()
       silenceTimerRef.current = setTimeout(evaluateBuffer, ms)
@@ -188,7 +195,7 @@ export function useLiveTranscription() {
       clearSilenceTimer()
       const turns = bufferRef.current
       bufferRef.current = []
-      if (turns.length === 0) return
+      if (turns.length === 0 || !useOverlayStore.getState().questionDetectionOn) return
 
       const combinedText = turns.map((t) => t.text).join(' ')
       if (!isLikelyQuestion(combinedText)) {
@@ -216,6 +223,7 @@ export function useLiveTranscription() {
           model: form.model,
           text: combinedText
         })
+        if (!useOverlayStore.getState().questionDetectionOn) return
         if (!complete || isBackchannel) return
         // Falls through to the rest of this function exactly as if
         // isLikelyQuestion() had returned true.
@@ -264,6 +272,7 @@ export function useLiveTranscription() {
           model: form.model,
           text: combinedText
         })
+        if (!useOverlayStore.getState().questionDetectionOn) return
 
         if (isBackchannel) {
           // Genuinely no answerable content — drop it. There is no "wait
@@ -285,6 +294,7 @@ export function useLiveTranscription() {
         }
       }
 
+      if (!useOverlayStore.getState().questionDetectionOn) return
       setQuestionDetected(true)
       setTimeout(() => setQuestionDetected(false), QUESTION_DETECTED_PULSE_MS)
 
@@ -633,6 +643,11 @@ export function useLiveTranscription() {
       // causing your own responses to trigger auto-answer. This mirrors ParakeetAI's
       // dual-stream model: share stream = other party, mic = you.
       if (e.source !== 'system') return
+      if (!useOverlayStore.getState().questionDetectionOn) {
+        clearSilenceTimer()
+        bufferRef.current = []
+        return
+      }
 
       const now = Date.now()
       bufferRef.current.push({ text: e.text, timestamp: now })
@@ -688,7 +703,10 @@ export function useLiveTranscription() {
       }
     }, SYSTEM_SILENCE_CHECK_INTERVAL_MS)
 
-    capture.startSystem().catch((err) => setError('system', err instanceof Error ? err.message : String(err)))
+    capture.startSystem().catch((err) => {
+      setSystemAudioIssue(true)
+      setError('system', err instanceof Error ? err.message : String(err))
+    })
 
     return () => {
       clearSilenceTimer()
@@ -707,6 +725,7 @@ export function useLiveTranscription() {
       unsubPartial()
       unsubFinal()
       unsubError()
+      unsubQuestionDetection()
       capture.stopAll()
     }
   }, [addTranscriptMessage, setPartialText, setSttStatus, setQuestionDetected])

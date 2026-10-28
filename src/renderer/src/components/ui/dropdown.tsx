@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 
 export interface DropdownOption {
@@ -24,9 +24,16 @@ export function Dropdown({
   onChange: (value: string) => void
   className?: string
 }): React.JSX.Element {
+  const listId = useId()
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const [active, setActive] = useState(0)
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const current = options.find((o) => o.value === value)
+
+  useEffect(() => {
+    if (open) rootRef.current?.querySelectorAll<HTMLButtonElement>('[role="option"]')[active]?.focus()
+  }, [open, active])
 
   useEffect(() => {
     if (!open) return
@@ -36,7 +43,7 @@ export function Dropdown({
       }
     }
     function onKeyDown(e: KeyboardEvent): void {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key === 'Escape') { e.stopPropagation(); setOpen(false); triggerRef.current?.focus() }
     }
     document.addEventListener('mousedown', onPointerDown)
     document.addEventListener('keydown', onKeyDown)
@@ -47,32 +54,44 @@ export function Dropdown({
   }, [open])
 
   return (
-    <div ref={rootRef} className="relative inline-block">
+    <div ref={rootRef} className="relative inline-block" onKeyDown={(event) => {
+      if (event.key === 'Tab') { setOpen(false); return }
+      if (!['ArrowDown', 'ArrowUp', 'Home', 'End', 'Escape'].includes(event.key)) return
+      event.preventDefault(); event.stopPropagation()
+      if (event.key === 'Escape') { setOpen(false); triggerRef.current?.focus(); return }
+      if (!open) { setActive(Math.max(0, options.findIndex((o) => o.value === value))); setOpen(true); return }
+      setActive((index) => event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1
+        : (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length)
+    }}>
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
-        className={`flex items-center gap-1.5 rounded-lg border border-black/10 bg-black/[0.02] px-3 py-1.5 text-sm text-neutral-700 transition hover:bg-black/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40 ${className}`}
+        ref={triggerRef} aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? listId : undefined}
+        aria-label={current?.label ?? value}
+        onClick={() => { setActive(Math.max(0, options.findIndex((o) => o.value === value))); setOpen((v) => !v) }}
+        className={`flex items-center gap-1.5 rounded-lg border border-[var(--bg-edge)] bg-[var(--state-layer)] px-3 py-1.5 text-sm text-[var(--text-hi)] transition hover:bg-[var(--state-layer)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40 ${className}`}
       >
         {current?.label ?? value}
-        <ChevronDown size={14} className="text-neutral-400" />
+        <ChevronDown size={14} className="text-[var(--text-mid)]" />
       </button>
       {open && (
         <ul
-          role="listbox"
-          className="absolute left-0 top-full z-50 mt-1 max-h-56 w-max min-w-full overflow-y-auto rounded-lg border border-black/10 bg-white py-1 text-sm text-neutral-700 shadow-xl"
+          role="listbox" id={listId} aria-label="Options"
+          className="absolute left-0 top-full z-50 mt-1 max-h-56 w-max min-w-full overflow-y-auto rounded-lg border border-[var(--bg-edge)] bg-[var(--bg-surface)] py-1 text-sm text-[var(--text-hi)] shadow-xl"
         >
-          {options.map((option) => (
+          {options.map((option, index) => (
             <li key={option.value}>
               <button
                 type="button"
                 role="option"
+                tabIndex={index === active ? 0 : -1}
                 aria-selected={option.value === value}
                 onClick={() => {
                   onChange(option.value)
                   setOpen(false)
+                  triggerRef.current?.focus()
                 }}
-                className={`block w-full whitespace-nowrap px-3 py-1.5 text-left transition hover:bg-black/[0.06] focus-visible:outline-none focus-visible:bg-black/[0.06] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)]/40 ${
-                  option.value === value ? 'bg-black/[0.04] font-medium' : ''
+                className={`block w-full whitespace-nowrap px-3 py-1.5 text-left transition hover:bg-[var(--state-layer)] focus-visible:outline-none focus-visible:bg-[var(--state-layer)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)]/40 ${
+                  option.value === value ? 'bg-[var(--state-layer)] font-medium' : ''
                 }`}
               >
                 {option.label}

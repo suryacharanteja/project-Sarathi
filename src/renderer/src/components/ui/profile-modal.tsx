@@ -109,17 +109,17 @@ export function ProfileModal({
       style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
     >
       <div
-        className="flex max-h-[85%] w-[90%] max-w-sm flex-col rounded-2xl border border-black/10 bg-white/95 p-4 shadow-2xl"
+        className="flex max-h-[85%] w-[90%] max-w-sm flex-col rounded-2xl border border-[var(--bg-edge)] bg-[var(--bg-surface)] p-4 shadow-2xl"
         style={{ backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
       >
         <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-sm font-semibold text-neutral-900">
+          <div className="flex items-center gap-1.5 text-sm font-semibold text-[var(--text-hi)]">
             <User size={15} />{' '}
             {creating ? 'New Profile' : learningProfile ? 'Learn Speaking Style' : 'Select Profile'}
           </div>
           <button
             onClick={learningProfile ? () => setLearningProfileId(null) : onClose}
-            className="rounded-full p-1 text-neutral-500 hover:bg-black/5"
+            className="rounded-full p-1 text-[var(--text-mid)] hover:bg-[var(--state-layer)]"
           >
             <X size={16} />
           </button>
@@ -127,29 +127,29 @@ export function ProfileModal({
 
         {learningProfile && learnMode === null ? (
           <div className="space-y-3">
-            <p className="text-sm text-neutral-700">
+            <p className="text-sm text-[var(--text-hi)]">
               How should Sarathi learn <span className="font-medium">{learningProfile.name}</span>'s speaking style?
             </p>
             <button
               onClick={() => setShowPractice(true)}
-              className="flex w-full items-center gap-2 rounded-lg border border-black/10 bg-black/[0.02] p-3 text-left hover:bg-black/[0.06]"
+              className="flex w-full items-center gap-2 rounded-lg border border-[var(--bg-edge)] bg-[var(--state-layer)] p-3 text-left hover:bg-[var(--state-layer)]"
             >
-              <Sparkles size={16} className="shrink-0 text-neutral-700" />
+              <Sparkles size={16} className="shrink-0 text-[var(--text-hi)]" />
               <span>
-                <span className="block text-sm font-medium text-neutral-800">Practice now (recommended)</span>
-                <span className="block text-[11px] text-neutral-500">
+                <span className="block text-sm font-medium text-[var(--text-hi)]">Practice now (recommended)</span>
+                <span className="block text-[11px] text-[var(--text-mid)]">
                   Answer a few questions deliberately, spoken or typed — higher-quality, verifiable input.
                 </span>
               </span>
             </button>
             <button
               onClick={startPassiveLearn}
-              className="flex w-full items-center gap-2 rounded-lg border border-black/10 bg-black/[0.02] p-3 text-left hover:bg-black/[0.06]"
+              className="flex w-full items-center gap-2 rounded-lg border border-[var(--bg-edge)] bg-[var(--state-layer)] p-3 text-left hover:bg-[var(--state-layer)]"
             >
-              <History size={16} className="shrink-0 text-neutral-700" />
+              <History size={16} className="shrink-0 text-[var(--text-hi)]" />
               <span>
-                <span className="block text-sm font-medium text-neutral-800">Learn from past interviews</span>
-                <span className="block text-[11px] text-neutral-500">
+                <span className="block text-sm font-medium text-[var(--text-hi)]">Learn from past interviews</span>
+                <span className="block text-[11px] text-[var(--text-mid)]">
                   Faster, but lower signal — uses fragments of your own speech from past saved sessions.
                 </span>
               </span>
@@ -159,44 +159,44 @@ export function ProfileModal({
           <div className="space-y-3">
             {generatedStyleText ? (
               <>
-                <p className="text-sm text-neutral-700">
+                <p className="text-sm text-[var(--text-hi)]">
                   Here's what Sarathi concluded about <span className="font-medium">{learningProfile.name}</span>'s
                   speaking style — read it and judge for yourself whether it's accurate:
                 </p>
-                <div className="max-h-56 overflow-y-auto rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs leading-relaxed text-emerald-900">
+                <div className="max-h-56 overflow-y-auto rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs leading-relaxed text-[var(--positive)]">
                   {generatedStyleText}
                 </div>
                 <button
                   onClick={() => setLearningProfileId(null)}
-                  className="w-full rounded-lg bg-neutral-900 py-2 text-sm font-medium text-white transition hover:bg-neutral-700"
+                  className="w-full rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white transition hover:bg-indigo-700"
                 >
                   Done
                 </button>
               </>
             ) : (
               <>
-                <p className="text-sm text-neutral-700">
+                <p className="text-sm text-[var(--text-hi)]">
                   Building a style profile for <span className="font-medium">{learningProfile.name}</span> from their
                   own past interview speech (never the interviewer's side).
                 </p>
                 {learnStats === null ? (
                   <div className="flex justify-center py-4">
-                    <Loader2 size={16} className="animate-spin text-neutral-400" />
+                    <Loader2 size={16} className="animate-spin text-[var(--text-mid)]" />
                   </div>
                 ) : learnStats.micCharCount === 0 ? (
-                  <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-snug text-amber-800">
+                  <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-snug text-[var(--warning)]">
                     No past sessions with saved transcripts found for this profile. Run an interview with "Save
                     Transcript" enabled first, then come back here.
                   </p>
                 ) : (
                   <div className="space-y-2">
-                    <p className="text-xs leading-snug text-neutral-500">
+                    <p className="text-xs leading-snug text-[var(--text-mid)]">
                       Found {learnStats.sessionCount} past session{learnStats.sessionCount === 1 ? '' : 's'}, ~
                       {learnStats.micCharCount.toLocaleString()} characters of speech
                       {learnStats.micCharCount < 1500 ? ' — on the thin side, but still usable.' : '.'}
                     </p>
                     {learningProfile.speakingStyleGeneratedAt && (
-                      <p className="text-[11px] text-neutral-400">
+                      <p className="text-[11px] text-[var(--text-mid)]">
                         Style already learned {new Date(learningProfile.speakingStyleGeneratedAt).toLocaleDateString()}{' '}
                         — generating again replaces it.
                       </p>
@@ -206,7 +206,7 @@ export function ProfileModal({
                 <button
                   onClick={handleGenerateStyle}
                   disabled={!learnStats || learnStats.micCharCount === 0 || learningBusy}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-neutral-900 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:opacity-50"
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:opacity-50"
                 >
                   {learningBusy ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
                   {learningBusy ? 'Learning…' : 'Generate style profile'}
@@ -220,7 +220,7 @@ export function ProfileModal({
             <button
               onClick={handleUploadResume}
               disabled={extracting}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-black/15 px-3 py-2 text-sm text-neutral-600 hover:bg-black/[0.03] disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[var(--bg-edge)] px-3 py-2 text-sm text-[var(--text-mid)] hover:bg-[var(--state-layer)] disabled:opacity-50"
             >
               <Upload size={14} /> {extracting ? 'Reading file...' : 'Upload Resume File (PDF/DOCX/TXT)'}
             </button>
@@ -234,14 +234,14 @@ export function ProfileModal({
             <div className="flex gap-2">
               <button
                 onClick={() => setCreating(false)}
-                className="flex-1 rounded-lg border border-black/10 py-2 text-sm text-neutral-600 hover:bg-black/5"
+                className="flex-1 rounded-lg border border-[var(--bg-edge)] py-2 text-sm text-[var(--text-mid)] hover:bg-[var(--state-layer)]"
               >
                 Back
               </button>
               <button
                 onClick={handleCreate}
                 disabled={!name.trim() || saving}
-                className="flex-1 rounded-lg bg-neutral-900 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:opacity-50"
+                className="flex-1 rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:opacity-50"
               >
                 {saving ? 'Saving...' : 'Save & Select'}
               </button>
@@ -249,32 +249,32 @@ export function ProfileModal({
           </div>
         ) : profiles === null ? (
           <div className="flex justify-center py-6">
-            <Loader2 size={16} className="animate-spin text-neutral-400" />
+            <Loader2 size={16} className="animate-spin text-[var(--text-mid)]" />
           </div>
         ) : (
           <div className="flex-1 space-y-2 overflow-y-auto">
             <button
               onClick={() => setCreating(true)}
-              className="flex w-full items-center gap-1.5 rounded-lg border border-dashed border-black/15 px-3 py-2 text-sm text-neutral-600 hover:bg-black/[0.03]"
+              className="flex w-full items-center gap-1.5 rounded-lg border border-dashed border-[var(--bg-edge)] px-3 py-2 text-sm text-[var(--text-mid)] hover:bg-[var(--state-layer)]"
             >
               <Plus size={14} /> New Profile
             </button>
             {profiles.length === 0 && (
-              <p className="py-2 text-center text-sm text-neutral-400">No saved profiles yet.</p>
+              <p className="py-2 text-center text-sm text-[var(--text-mid)]">No saved profiles yet.</p>
             )}
             {profiles.map((profile) => (
               <div
                 key={profile.id}
-                className="flex items-center gap-1 rounded-lg border border-black/10 bg-black/[0.02] pr-1 hover:bg-black/[0.06]"
+                className="flex items-center gap-1 rounded-lg border border-[var(--bg-edge)] bg-[var(--state-layer)] pr-1 hover:bg-[var(--state-layer)]"
               >
                 <button
                   onClick={() => {
                     onSelect(profile.id, profile.name)
                     onClose()
                   }}
-                  className="flex flex-1 items-center gap-1.5 px-3 py-2 text-left text-sm text-neutral-800"
+                  className="flex flex-1 items-center gap-1.5 px-3 py-2 text-left text-sm text-[var(--text-hi)]"
                 >
-                  <User size={14} className="shrink-0 text-neutral-400" />
+                  <User size={14} className="shrink-0 text-[var(--text-mid)]" />
                   <span className="flex-1">{profile.name}</span>
                 </button>
                 <button
@@ -284,8 +284,8 @@ export function ProfileModal({
                   }}
                   className={`flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium transition ${
                     profile.speakingStyleProfile
-                      ? 'text-emerald-600 hover:bg-emerald-50'
-                      : 'text-neutral-500 hover:bg-black/5'
+                      ? 'text-[var(--positive)] hover:bg-emerald-50'
+                      : 'text-[var(--text-mid)] hover:bg-[var(--state-layer)]'
                   }`}
                 >
                   {profile.speakingStyleProfile ? <Check size={12} /> : <Sparkles size={12} />}

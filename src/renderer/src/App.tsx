@@ -1,11 +1,13 @@
 ﻿import { useState } from 'react'
 import { Toaster } from 'sonner'
+import { useThemeStore } from './stores/theme-store'
 import { CreateSessionScreen } from './features/session/CreateSessionScreen'
 import { OverlayHUD } from './features/overlay/OverlayHUD'
 import { MinimizedBubble } from './components/ui/minimized-bubble'
 import { ResizeHandles } from './components/ui/resize-handles'
 
 export default function App(): React.JSX.Element {
+  const theme = useThemeStore((state) => state.theme)
   const [screen, setScreen] = useState<'session' | 'overlay'>('session')
   const [minimized, setMinimized] = useState(false)
 
@@ -31,11 +33,12 @@ export default function App(): React.JSX.Element {
     <div className={`h-screen bg-transparent ${minimized ? '' : 'p-2'}`}>
       <Toaster
         position="top-right"
+        theme={theme}
         toastOptions={{
           style: {
-            background: '#1a1a1a',
-            color: '#e5e5e5',
-            border: '1px solid rgba(255,255,255,0.1)'
+            background: 'var(--bg-surface)',
+            color: 'var(--text-hi)',
+            border: '1px solid var(--bg-edge)'
           }
         }}
       />

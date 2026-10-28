@@ -8,6 +8,7 @@ interface OverlayStore {
   cards: AnswerCard[]
   activeCardIndex: number
   autoAnswerOn: boolean
+  questionDetectionOn: boolean
   questionDetected: boolean
   micLevel: number
   /** cardId currently armed to receive the next mic utterance as a voice
@@ -51,6 +52,7 @@ interface OverlayStore {
   nextCard: () => void
   prevCard: () => void
   setAutoAnswerOn: (on: boolean) => void
+  setQuestionDetectionOn: (on: boolean) => void
   setQuestionDetected: (detected: boolean) => void
   setMicLevel: (level: number) => void
   setVoiceFollowUpCardId: (cardId: string | null) => void
@@ -68,6 +70,7 @@ export const useOverlayStore = create<OverlayStore>((set, get) => ({
   cards: [],
   activeCardIndex: 0,
   autoAnswerOn: true,
+  questionDetectionOn: true,
   questionDetected: false,
   micLevel: 0,
   voiceFollowUpCardId: null,
@@ -116,6 +119,8 @@ export const useOverlayStore = create<OverlayStore>((set, get) => ({
   },
 
   setAutoAnswerOn: (autoAnswerOn) => set({ autoAnswerOn }),
+  setQuestionDetectionOn: (questionDetectionOn) =>
+    set({ questionDetectionOn, ...(questionDetectionOn ? {} : { questionDetected: false }) }),
   setQuestionDetected: (questionDetected) => set({ questionDetected }),
   setMicLevel: (micLevel) => set({ micLevel }),
   setVoiceFollowUpCardId: (voiceFollowUpCardId) => set({ voiceFollowUpCardId }),

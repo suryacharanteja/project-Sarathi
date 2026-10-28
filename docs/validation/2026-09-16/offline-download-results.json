@@ -1,0 +1,11 @@
+{
+  "date": "2026-09-16T06:01:03.148Z",
+  "model": "Xenova/whisper-small",
+  "modelCache": "D:\\AI\\project Sarathi\\cache\\offline-validation\\models",
+  "results": [
+    {
+      "name": "Non-default model download and native ONNX load",
+      "status": "PASS"
+    }
+  ]
+}

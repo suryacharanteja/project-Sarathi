@@ -114,11 +114,11 @@ export function createSttService(webContents: WebContents, readSettings: () => A
       }
       // No cloud key at all — nothing to prefer. Use local directly if it's
       // ready rather than hard-failing when a working fallback exists.
+      local.configure({
+        modelId: settings.sttModel,
+        language: settings.sttLanguage === 'auto' ? null : settings.sttLanguage
+      })
       if (settings.sttFallbackToLocal && local.modelStatus().phase === 'ready') {
-        local.configure({
-          modelId: settings.sttModel,
-          language: settings.sttLanguage === 'auto' ? null : settings.sttLanguage
-        })
         announce(source, 'local')
         return local.start(source)
       }

@@ -59,15 +59,17 @@ interface SourceState {
   endpointer: EndpointerState
   active: boolean
   lastPartialAt: number
+  generation: number
+  stopping: boolean
 }
 
 type Job =
-  | { kind: 'final'; source: SttSource; samples: Float32Array }
-  | { kind: 'partial'; source: SttSource; samples: Float32Array }
+  | { kind: 'final'; source: SttSource; generation: number; samples: Float32Array }
+  | { kind: 'partial'; source: SttSource; generation: number; samples: Float32Array }
 
 const sources: Record<SttSource, SourceState> = {
-  mic: { endpointer: createEndpointerState(), active: false, lastPartialAt: 0 },
-  system: { endpointer: createEndpointerState(), active: false, lastPartialAt: 0 }
+  mic: { endpointer: createEndpointerState(), active: false, lastPartialAt: 0, generation: 0, stopping: false },
+  system: { endpointer: createEndpointerState(), active: false, lastPartialAt: 0, generation: 0, stopping: false }
 }
 
 let pipe: AsrPipeline | null = null
@@ -75,6 +77,7 @@ let language: string | null = 'en'
 let modelId: SttModelId = DEFAULT_STT_MODEL_ID
 let queue: Job[] = []
 let draining = false
+let runningJob: Job | null = null
 
 function send(message: WorkerResponse): void {
   process.parentPort.postMessage(message)
@@ -121,7 +124,7 @@ async function loadModel(cacheDir: string, allowDownload: boolean): Promise<void
     })
     send({ type: 'model-ready' })
     for (const source of ['mic', 'system'] as SttSource[]) {
-      if (sources[source].active) send({ type: 'listening', source })
+      if (sources[source].active) send({ type: 'listening', source, generation: sources[source].generation })
     }
   } catch (error) {
     pipe = null
@@ -144,38 +147,58 @@ function enqueue(job: Job): void {
   void drain()
 }
 
+function acknowledgeStops(): void {
+  for (const source of ['mic', 'system'] as SttSource[]) {
+    const state = sources[source]
+    if (!state.stopping) continue
+    const current = (job: Job): boolean => job.source === source && job.generation === state.generation
+    if ((runningJob && current(runningJob)) || queue.some(current)) continue
+    state.stopping = false
+    send({ type: 'stopped', source, generation: state.generation })
+  }
+}
+
 async function drain(): Promise<void> {
   if (draining) return
   draining = true
   try {
     while (queue.length > 0) {
       const job = queue.shift()!
-      if (!pipe || !sources[job.source].active) continue
+      if (!pipe || job.generation !== sources[job.source].generation) continue
+      if (job.kind === 'partial' && !sources[job.source].active) continue
       // A partial that waited behind a final is already stale — the final it
       // was previewing has been emitted, so publishing it now would rewind the
       // transcript strip.
       if (job.kind === 'partial' && queue.some((j) => j.kind === 'final' && j.source === job.source)) continue
 
       const startedAt = Date.now()
+      runningJob = job
       try {
         const result = await pipe(job.samples, {
           return_timestamps: false,
           task: 'transcribe',
           ...(language ? { language } : {})
         })
+        if (job.generation !== sources[job.source].generation) continue
         const text = (result.text ?? '').trim()
         if (job.kind === 'final') {
           lastFinalDecodeMs = Date.now() - startedAt
-          if (isMeaningfulTranscript(text)) send({ type: 'final', source: job.source, text })
-        } else if (text) {
-          send({ type: 'partial', source: job.source, text })
+          if (isMeaningfulTranscript(text)) send({ type: 'final', source: job.source, generation: job.generation, text })
+        } else if (text && sources[job.source].active) {
+          send({ type: 'partial', source: job.source, generation: job.generation, text })
         }
       } catch (error) {
-        send({ type: 'decode-error', source: job.source, error: errorMessage(error) })
+        if (job.generation === sources[job.source].generation) {
+          send({ type: 'decode-error', source: job.source, generation: job.generation, error: errorMessage(error) })
+        }
+      } finally {
+        runningJob = null
+        acknowledgeStops()
       }
     }
   } finally {
     draining = false
+    acknowledgeStops()
   }
 }
 
@@ -188,7 +211,7 @@ function onAudio(source: SttSource, pcm: ArrayBuffer): void {
 
   if (event.type === 'end-of-turn') {
     if (hasEnoughSpeech(state.endpointer)) {
-      enqueue({ kind: 'final', source, samples: collectUtterance(state.endpointer) })
+      enqueue({ kind: 'final', source, generation: state.generation, samples: collectUtterance(state.endpointer) })
     }
     closeUtterance(state.endpointer, event.reason)
     state.lastPartialAt = 0
@@ -208,16 +231,18 @@ function onAudio(source: SttSource, pcm: ArrayBuffer): void {
     // Never let partials pile up: if one is already queued for this source the
     // machine is behind, so skip this tick entirely.
     if (!queue.some((j) => j.kind === 'partial' && j.source === source)) {
-      enqueue({ kind: 'partial', source, samples: collectUtterance(state.endpointer) })
+      enqueue({ kind: 'partial', source, generation: state.generation, samples: collectUtterance(state.endpointer) })
     }
   }
 }
 
-function reset(source: SttSource): void {
+function reset(source: SttSource, generation: number): void {
   sources[source] = {
     endpointer: createEndpointerState(),
     active: false,
-    lastPartialAt: 0
+    lastPartialAt: 0,
+    generation,
+    stopping: false
   }
   queue = queue.filter((job) => job.source !== source)
 }
@@ -236,19 +261,24 @@ process.parentPort.on('message', (event) => {
       void loadModel(message.cacheDir, true)
       break
     case 'start':
-      reset(message.source)
+      reset(message.source, message.generation)
       sources[message.source].active = true
-      if (pipe) send({ type: 'listening', source: message.source })
+      if (pipe) send({ type: 'listening', source: message.source, generation: message.generation })
       break
     case 'stop': {
       // Flush whatever was mid-utterance rather than discarding it — someone
       // toggling the mic off right after finishing a sentence should still see
       // that sentence.
       const state = sources[message.source]
-      if (state.active && state.endpointer.speaking && hasEnoughSpeech(state.endpointer)) {
-        enqueue({ kind: 'final', source: message.source, samples: collectUtterance(state.endpointer) })
+      if (message.generation !== state.generation || !state.active) break
+      state.active = false
+      state.stopping = true
+      queue = queue.filter(job => job.source !== message.source || job.kind === 'final')
+      if (state.endpointer.speaking && hasEnoughSpeech(state.endpointer)) {
+        enqueue({ kind: 'final', source: message.source, generation: state.generation, samples: collectUtterance(state.endpointer) })
       }
-      reset(message.source)
+      state.endpointer = createEndpointerState()
+      acknowledgeStops()
       break
     }
     case 'audio':

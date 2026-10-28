@@ -1,5 +1,7 @@
 # Sarathi — AI-Powered Teleprompter & Webinar Co-Pilot
 
+Project memory: [Live Project Delivery Register](live_project_delivery_register.md). All project work, decisions, issues, changes and validation must be documented there; contributors and agents must read it before starting work. See [AGENTS.md](AGENTS.md).
+
 > **Sarathi** (Sanskrit: सारथी) — *"Thus it happened."* The charioteer who guided the greatest warriors. Now guiding you through every presentation.
 
 Sarathi is an open-source desktop teleprompter for webinars and live talks. It scrolls your script while an AI co-pilot listens to your audience in real time, detects questions, and surfaces concise answers — without interrupting your flow.
@@ -8,13 +10,13 @@ Sarathi is an open-source desktop teleprompter for webinars and live talks. It s
 
 ## Features
 
-- **Teleprompter** — Smooth auto-scroll with adjustable speed, font size, and optional horizontal mirror flip (for physical glass rigs)
+- **Teleprompter** — Smooth auto-scroll with adjustable speed, visible pause/resume and manual scroll controls, font size, and optional horizontal mirror flip (for physical glass rigs)
 - **AI Listener** — Captures system audio, transcribes your audience's questions, and streams AI answers into a side panel
 - **Multi-provider AI** — Gemini, OpenAI, DeepSeek, and free OpenCode Zen; automatic failover if a provider is down
 - **Offline STT fallback** — AssemblyAI in the cloud, with local Whisper as an automatic backup
 - **Document viewer** — Open PDF, DOCX, PPTX, TXT, and Markdown files; DOCX and PPTX files use LibreOffice conversion when available for faithful visual previews
 - **Slide builder** — Import formatted DOCX/PPTX content, split Markdown into presentation slides, preview the deck, and export slide content
-- **Presentation overlay** — Use slide navigation, shortcut help, minimized overlay controls, and presenter-focused viewer controls while speaking
+- **Presentation overlay** — Use slide navigation, shortcut help, a co-pilot panel that stays collapsed until needed, independent question-detection controls, and presenter-focused viewer controls while speaking
 - **Secure by design** — API keys are stored in your OS keychain via Electron safeStorage; **nothing is committed to this repo**
 - **Cross-platform** — Windows (NSIS installer), macOS, Linux
 
@@ -39,7 +41,7 @@ Slide Builder imports headings, paragraphs, lists, and bold text from supported 
 
 1. Launch the app and click the **Settings** (⚙) icon
 2. Paste your API keys (Gemini, OpenAI, AssemblyAI, etc.)
-3. Keys are encrypted with your OS keychain and stored in `%AppData%/sarathi-settings.json` — **never in the repository**
+3. Keys are encrypted with your OS keychain and stored in the app's user-data directory — **never in the repository**. If secure storage is unavailable, saving keys fails with an error; unlock your OS keychain and retry. Keys are not silently saved as plaintext.
 
 ---
 
@@ -59,6 +61,12 @@ npm run test:pptx      # Test PPTX extraction
 npm run test:schemas   # Test shared IPC and settings schemas
 npm run test:stt       # Test speech endpointing
 ```
+
+After building, `node scripts/electron-smoke.cjs` runs isolated Electron integration checks (including brief microphone/loopback acquisition without recording). After `npm run dist:win`, `node scripts/packaged-smoke.cjs` checks the packaged executable without installing it. See the [validation report](docs/validation/2026-09-16/report.md) for results and verification limits.
+
+For real offline speech inference and Retry recovery, see the [offline acceptance report](docs/validation/2026-09-16/offline-report.md). It includes the local synthetic-speech fixture, model-download step, and packaged `--offline` check.
+
+The [speech lifecycle report](docs/validation/2026-09-16/lifecycle-report.md) adds `--lifecycle` checks for repeated turns, final-utterance delivery on stop, and stale-result suppression after restart.
 
 ---
 
@@ -107,3 +115,7 @@ Pull requests are welcome. Please open an issue first for large changes.
 ## License
 
 MIT © [CharanTheAIGuy](https://github.com/CharanTheAIGuy)
+
+Document-import validation: [report and limitations](docs/validation/2026-09-16/document-report.md). After building, run `node scripts/electron-smoke.cjs`; add `--without-libreoffice` only on a machine without LibreOffice, or `--native-picker` for an interactive selection/cancellation check.
+
+Appearance: use the Sun/Moon button next to Settings or Home to switch light/dark themes. The choice is saved on this device; first launch follows the OS theme. [UI/UX live acceptance and screenshots](docs/validation/2026-09-16/ui-uat/report.md). Run `node scripts/ui-uat.cjs` after building to repeat the isolated theme/keyboard/layout checks.

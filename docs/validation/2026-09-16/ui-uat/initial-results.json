@@ -1,0 +1,52 @@
+{
+  "date": "2026-09-16T07:28:29.209Z",
+  "results": [
+    {
+      "name": "UX-001 initial theme follows OS preference",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-001 light theme applies and persists through reload",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-001 light semantic text contrast is at least 4.5:1",
+      "status": "FAIL",
+      "error": "--text-hi #fff"
+    },
+    {
+      "name": "UX-001 dark theme applies and persists through reload",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-001 dark semantic text contrast is at least 4.5:1",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-002 keyboard activates 48px theme control beside Settings",
+      "status": "FAIL",
+      "error": "Expected \"actual\" to be strictly unequal to:\n\n'dark'"
+    },
+    {
+      "name": "UX-002 four modes remain labeled and selectable at 360px",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-003 light Settings labels, focus trap and Escape",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-003 dark Settings labels, focus trap and Escape",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-003 dropdown supports arrows, Enter and focus return",
+      "status": "FAIL",
+      "error": "Expected values to be strictly equal:\n\nnull !== 'listbox'\n"
+    },
+    {
+      "name": "UX-004 presentation preserves content while switching both themes",
+      "status": "PASS"
+    }
+  ]
+}

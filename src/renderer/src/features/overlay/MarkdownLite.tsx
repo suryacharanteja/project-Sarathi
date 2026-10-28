@@ -3,14 +3,14 @@ function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
       return (
-        <strong key={`${keyPrefix}-${i}`} className="font-semibold text-white">
+        <strong key={`${keyPrefix}-${i}`} className="font-semibold text-[var(--text-hi)]">
           {part.slice(2, -2)}
         </strong>
       )
     }
     if (part.startsWith('`') && part.endsWith('`')) {
       return (
-        <code key={`${keyPrefix}-${i}`} className="rounded bg-white/10 px-1 py-0.5 font-mono text-[0.85em]">
+        <code key={`${keyPrefix}-${i}`} className="rounded bg-[var(--state-layer)] px-1 py-0.5 font-mono text-[0.85em]">
           {part.slice(1, -1)}
         </code>
       )
@@ -54,5 +54,5 @@ export function MarkdownLite({ text }: { text: string }): React.JSX.Element {
   })
   flushList('list-end')
 
-  return <div className="space-y-2 text-sm text-neutral-200">{blocks}</div>
+  return <div className="space-y-2 text-sm text-[var(--text-hi)]">{blocks}</div>
 }

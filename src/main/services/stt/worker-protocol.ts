@@ -5,8 +5,8 @@ import type { SttModelId } from './whisper'
 export type WorkerRequest =
   | { type: 'init'; modelId: SttModelId; cacheDir: string; language: string | null; allowDownload: boolean }
   | { type: 'ensure-model'; modelId: SttModelId; cacheDir: string; language: string | null }
-  | { type: 'start'; source: SttSource }
-  | { type: 'stop'; source: SttSource }
+  | { type: 'start'; source: SttSource; generation: number }
+  | { type: 'stop'; source: SttSource; generation: number }
   | { type: 'audio'; source: SttSource; pcm: ArrayBuffer }
   | { type: 'dispose' }
 
@@ -15,7 +15,8 @@ export type WorkerResponse =
   | { type: 'model-progress'; phase: 'downloading' | 'loading'; percent: number | null; loadedBytes: number | null; totalBytes: number | null }
   | { type: 'model-ready' }
   | { type: 'model-error'; error: string; cached: boolean }
-  | { type: 'listening'; source: SttSource }
-  | { type: 'partial'; source: SttSource; text: string }
-  | { type: 'final'; source: SttSource; text: string }
-  | { type: 'decode-error'; source: SttSource; error: string }
+  | { type: 'listening'; source: SttSource; generation: number }
+  | { type: 'stopped'; source: SttSource; generation: number }
+  | { type: 'partial'; source: SttSource; generation: number; text: string }
+  | { type: 'final'; source: SttSource; generation: number; text: string }
+  | { type: 'decode-error'; source: SttSource; generation: number; error: string }

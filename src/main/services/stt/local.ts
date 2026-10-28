@@ -18,6 +18,7 @@ import type { WorkerRequest, WorkerResponse } from './worker-protocol'
  * is exactly the failure the AssemblyAI fallback exists to catch.
  */
 const DECODE_FAILURE_LIMIT = 3
+const STOP_DRAIN_TIMEOUT_MS = 30000
 
 /** Where the ONNX weights live. Survives app upgrades; trivial to locate or clear. */
 export function sttModelCacheDir(): string {
@@ -46,6 +47,8 @@ export function createLocalSttService(webContents: WebContents, callbacks: Local
   let language: string | null = 'en'
   let modelId: SttModelId = DEFAULT_STT_MODEL_ID
   const active: Record<SttSource, boolean> = { mic: false, system: false }
+  const generations: Record<SttSource, number> = { mic: 0, system: 0 }
+  const stopping = new Map<SttSource, ReturnType<typeof setTimeout>>()
   const decodeFailures: Record<SttSource, number> = { mic: 0, system: 0 }
 
   /** One-shot listeners used by `ensureModel` to await a download outcome. */
@@ -74,7 +77,8 @@ export function createLocalSttService(webContents: WebContents, callbacks: Local
     child?.postMessage(message)
   }
 
-  function ensureChild(): UtilityProcess {
+  function ensureChild(allowDownload = false): UtilityProcess {
+    if (disposed) throw new Error('The local speech service has been disposed.')
     if (child) return child
     const spawned = utilityProcess.fork(workerEntry(), [], {
       serviceName: 'Sarathi-local-stt',
@@ -82,7 +86,9 @@ export function createLocalSttService(webContents: WebContents, callbacks: Local
     })
     child = spawned
 
-    spawned.on('message', (message: WorkerResponse) => handleWorkerMessage(message))
+    spawned.on('message', (message: WorkerResponse) => {
+      if (child === spawned) handleWorkerMessage(message)
+    })
     spawned.on('exit', (code) => {
       if (child !== spawned) return
       child = null
@@ -91,15 +97,22 @@ export function createLocalSttService(webContents: WebContents, callbacks: Local
       // documents. Nothing is recoverable in-process, so hand every live source
       // to the fallback rather than sitting on a dead worker.
       const reason = `The local speech engine stopped unexpectedly (exit ${code}).`
+      for (const source of stopping.keys()) send(IPC_CHANNELS.sttError, { source, error: reason })
+      clearStops()
+      failPending(reason)
       updateStatus({ phase: 'error', error: reason })
       if (active.mic || active.system) callbacks.onUnavailable('all', reason)
     })
 
-    post({ type: 'init', modelId, cacheDir: sttModelCacheDir(), language, allowDownload: false })
+    post({ type: 'init', modelId, cacheDir: sttModelCacheDir(), language, allowDownload })
     return spawned
   }
 
   function handleWorkerMessage(message: WorkerResponse): void {
+    if ('generation' in message && (
+      message.generation !== generations[message.source] ||
+      (!active[message.source] && !stopping.has(message.source))
+    )) return
     switch (message.type) {
       case 'model-progress':
         updateStatus({
@@ -118,10 +131,14 @@ export function createLocalSttService(webContents: WebContents, callbacks: Local
         if (active.mic || active.system) callbacks.onUnavailable('all', message.error)
         break
       case 'listening':
-        send(IPC_CHANNELS.sttStatus, { source: message.source, status: 'listening' })
+        if (active[message.source]) send(IPC_CHANNELS.sttStatus, { source: message.source, status: 'listening' })
+        break
+      case 'stopped':
+        clearStop(message.source)
+        shutdownIfIdle()
         break
       case 'partial':
-        send(IPC_CHANNELS.sttPartial, { source: message.source, text: message.text })
+        if (active[message.source]) send(IPC_CHANNELS.sttPartial, { source: message.source, text: message.text })
         break
       case 'final':
         decodeFailures[message.source] = 0
@@ -140,13 +157,15 @@ export function createLocalSttService(webContents: WebContents, callbacks: Local
 
   function start(source: SttSource): { success: boolean; error?: string } {
     ensureChild()
+    clearStop(source)
+    generations[source] += 1
     active[source] = true
     decodeFailures[source] = 0
     // 'connecting' here means "engine warming up" — the same state the UI
     // already renders for the AssemblyAI handshake, so nothing downstream had
     // to learn a new vocabulary.
     send(IPC_CHANNELS.sttStatus, { source, status: 'connecting' })
-    post({ type: 'start', source })
+    post({ type: 'start', source, generation: generations[source] })
     if (modelStatus().phase === 'missing') {
       // Not downloaded and we are mid-call: this is precisely when downloading
       // 252 MB is the wrong move. Report unavailable and let the router fall
@@ -160,9 +179,33 @@ export function createLocalSttService(webContents: WebContents, callbacks: Local
   function stop(source: SttSource): void {
     if (!active[source]) return
     active[source] = false
-    post({ type: 'stop', source })
+    if (!child) {
+      send(IPC_CHANNELS.sttStatus, { source, status: 'off' })
+      return
+    }
+    // Keep the worker alive until its queued/in-flight finals are delivered.
+    // A later start invalidates this generation and cancels the old drain.
+    stopping.set(source, setTimeout(() => {
+      clearStop(source)
+      send(IPC_CHANNELS.sttError, { source, error: 'Timed out finishing the last speech turn.' })
+      shutdownIfIdle()
+    }, STOP_DRAIN_TIMEOUT_MS))
+    post({ type: 'stop', source, generation: generations[source] })
     send(IPC_CHANNELS.sttStatus, { source, status: 'off' })
-    if (!active.mic && !active.system) shutdownChild()
+  }
+
+  function clearStop(source: SttSource): void {
+    const timer = stopping.get(source)
+    if (timer) clearTimeout(timer)
+    stopping.delete(source)
+  }
+
+  function clearStops(): void {
+    for (const source of stopping.keys()) clearStop(source)
+  }
+
+  function shutdownIfIdle(): void {
+    if (!active.mic && !active.system && stopping.size === 0 && watchers.size === 0) shutdownChild()
   }
 
   function pushAudioChunk(source: SttSource, data: ArrayBuffer): void {
@@ -170,7 +213,13 @@ export function createLocalSttService(webContents: WebContents, callbacks: Local
     post({ type: 'audio', source, pcm: data })
   }
 
+  function failPending(error: string): void {
+    for (const watcher of [...watchers]) watcher({ type: 'model-error', error, cached: false })
+  }
+
   function shutdownChild(): void {
+    clearStops()
+    failPending('The local speech engine stopped. Please retry the model download.')
     if (!child) return
     const spawned = child
     child = null
@@ -194,7 +243,6 @@ export function createLocalSttService(webContents: WebContents, callbacks: Local
    * rather than a worker round trip so a long download still streams progress.
    */
   function ensureModel(): Promise<{ ok: boolean; error?: string }> {
-    ensureChild()
     return new Promise((resolve) => {
       const settle = (result: { ok: boolean; error?: string }): void => {
         watchers.delete(watcher)
@@ -205,7 +253,16 @@ export function createLocalSttService(webContents: WebContents, callbacks: Local
         else if (message.type === 'model-error') settle({ ok: false, error: message.error })
       }
       watchers.add(watcher)
-      post({ type: 'ensure-model', modelId, cacheDir: sttModelCacheDir(), language })
+      try {
+        // A fresh download worker must initialize with downloads allowed.
+        // Sending offline init first races its expected missing-model error
+        // against this request and incorrectly reports the download failed.
+        const alreadyRunning = child !== null
+        ensureChild(true)
+        if (alreadyRunning) post({ type: 'ensure-model', modelId, cacheDir: sttModelCacheDir(), language })
+      } catch (error) {
+        settle({ ok: false, error: error instanceof Error ? error.message : 'Unable to start the model download.' })
+      }
     })
   }
 

@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-28T17:21:16.246Z",
+  "results": [
+    {
+      "name": "UX-001 initial theme follows OS preference",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-001 light theme applies and persists through reload",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-001 light semantic text contrast is at least 4.5:1",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-001 dark theme applies and persists through reload",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-001 dark semantic text contrast is at least 4.5:1",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-002 keyboard activates 48px theme control beside Settings",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-002 four modes remain labeled and selectable at 360px",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-002 slide creation, teacher timer and mirror controls work",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-003 light Settings labels, focus trap and Escape",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-003 dark Settings labels, focus trap and Escape",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-003 dropdown supports arrows, Enter and focus return",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-006 manual controls pause auto-scroll and move the script",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-007 co-pilot collapses when unused and question detection can be toggled",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-004 presentation preserves content while switching both themes",
+      "status": "PASS"
+    },
+    {
+      "name": "UX-008 PDF fit-page and high-DPI canvas rendering",
+      "status": "PASS"
+    }
+  ]
+}

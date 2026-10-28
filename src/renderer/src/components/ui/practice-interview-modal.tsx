@@ -234,40 +234,40 @@ export function PracticeInterviewModal({
       style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
     >
       <div
-        className="flex max-h-[85%] w-[90%] max-w-sm flex-col rounded-2xl border border-black/10 bg-white/95 p-4 shadow-2xl"
+        className="flex max-h-[85%] w-[90%] max-w-sm flex-col rounded-2xl border border-[var(--bg-edge)] bg-[var(--bg-surface)] p-4 shadow-2xl"
         style={{ backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
       >
         <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-sm font-semibold text-neutral-900">
+          <div className="flex items-center gap-1.5 text-sm font-semibold text-[var(--text-hi)]">
             <Sparkles size={15} /> Practice & Learn My Style
           </div>
-          <button onClick={onClose} className="rounded-full p-1 text-neutral-500 hover:bg-black/5">
+          <button onClick={onClose} className="rounded-full p-1 text-[var(--text-mid)] hover:bg-[var(--state-layer)]">
             <X size={16} />
           </button>
         </div>
 
         {resultText ? (
           <div className="space-y-3">
-            <p className="text-sm text-neutral-700">
+            <p className="text-sm text-[var(--text-hi)]">
               Here's what Sarathi concluded about <span className="font-medium">{profileName}</span>'s speaking style
               from your practice answers:
             </p>
-            <div className="max-h-56 overflow-y-auto rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs leading-relaxed text-emerald-900">
+            <div className="max-h-56 overflow-y-auto rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs leading-relaxed text-[var(--positive)]">
               {resultText}
             </div>
             <button
               onClick={onClose}
-              className="w-full rounded-lg bg-neutral-900 py-2 text-sm font-medium text-white transition hover:bg-neutral-700"
+              className="w-full rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white transition hover:bg-indigo-700"
             >
               Done
             </button>
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-[var(--text-mid)]">
               Question {index + 1} of {PRACTICE_QUESTIONS.length} · {answeredCount} answered
             </p>
-            <p className="text-sm font-medium text-neutral-800">{PRACTICE_QUESTIONS[index]}</p>
+            <p className="text-sm font-medium text-[var(--text-hi)]">{PRACTICE_QUESTIONS[index]}</p>
 
             <TextArea
               rows={5}
@@ -281,11 +281,11 @@ export function PracticeInterviewModal({
                 the recording was stopped and committed. */}
             {recording && (
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-2">
-                <p className="mb-0.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-amber-700">
+                <p className="mb-0.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-[var(--warning)]">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
                   Listening
                 </p>
-                <p className="text-xs leading-snug text-amber-900">
+                <p className="text-xs leading-snug text-[var(--warning)]">
                   {livePreview || 'Start speaking — your words will appear here.'}
                 </p>
               </div>
@@ -295,26 +295,26 @@ export function PracticeInterviewModal({
               type="button"
               onClick={recording ? handleStopSpeaking : handleSpeak}
               className={`flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                recording ? 'bg-red-500/10 text-red-600 hover:bg-red-500/20' : 'bg-black/5 text-neutral-700 hover:bg-black/10'
+                recording ? 'bg-red-500/10 text-[var(--danger)] hover:bg-red-500/20' : 'bg-[var(--state-layer)] text-[var(--text-hi)] hover:bg-[var(--state-layer)]'
               }`}
             >
               {recording ? <Square size={12} /> : <Mic size={12} />}
               {recording ? 'Stop speaking' : 'Speak this answer instead'}
             </button>
-            {recordError && <p className="text-[11px] text-red-600">{recordError}</p>}
+            {recordError && <p className="text-[11px] text-[var(--danger)]">{recordError}</p>}
 
             <div className="flex gap-2 pt-1">
               <button
                 onClick={goBack}
                 disabled={index === 0 || submitting}
-                className="flex-1 rounded-lg border border-black/10 py-2 text-sm text-neutral-600 hover:bg-black/5 disabled:opacity-40"
+                className="flex-1 rounded-lg border border-[var(--bg-edge)] py-2 text-sm text-[var(--text-mid)] hover:bg-[var(--state-layer)] disabled:opacity-40"
               >
                 Back
               </button>
               <button
                 onClick={goNext}
                 disabled={submitting}
-                className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-neutral-900 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:opacity-50"
+                className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:opacity-50"
               >
                 {submitting ? (
                   <Loader2 size={14} className="animate-spin" />
@@ -327,7 +327,7 @@ export function PracticeInterviewModal({
                 )}
               </button>
             </div>
-            <p className="text-center text-[11px] text-neutral-400">
+            <p className="text-center text-[11px] text-[var(--text-mid)]">
               Skip any question by leaving it blank and pressing Next.
             </p>
           </div>

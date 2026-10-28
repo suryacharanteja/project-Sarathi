@@ -11,7 +11,7 @@ export function CallSessionsList({ onOpenSession }: { onOpenSession: (id: string
 
   if (sessions === null) {
     return (
-      <div className="flex flex-1 items-center justify-center text-neutral-400">
+      <div className="flex flex-1 items-center justify-center text-[var(--text-mid)]">
         <Loader2 size={16} className="animate-spin" />
       </div>
     )
@@ -19,7 +19,7 @@ export function CallSessionsList({ onOpenSession }: { onOpenSession: (id: string
 
   if (sessions.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center text-sm text-neutral-400">
+      <div className="flex flex-1 items-center justify-center text-sm text-[var(--text-mid)]">
         No call sessions yet.
       </div>
     )
@@ -31,13 +31,13 @@ export function CallSessionsList({ onOpenSession }: { onOpenSession: (id: string
         <div
           key={session.id}
           onClick={() => onOpenSession(session.id)}
-          className="flex cursor-default items-center justify-between rounded-lg border border-black/10 bg-black/[0.02] px-3 py-2.5 transition hover:bg-black/[0.06]"
+          className="flex cursor-default items-center justify-between rounded-lg border border-[var(--bg-edge)] bg-[var(--state-layer)] px-3 py-2.5 transition hover:bg-[var(--state-layer)]"
         >
-          <div className="flex items-center gap-2 text-sm text-neutral-800">
+          <div className="flex items-center gap-2 text-sm text-[var(--text-hi)]">
             {session.form.sessionType === 'interview' ? <Briefcase size={14} /> : <Code2 size={14} />}
             <span className="font-medium">{session.form.company || 'Untitled session'}</span>
           </div>
-          <span className="text-xs text-neutral-400">
+          <span className="text-xs text-[var(--text-mid)]">
             {new Date(session.createdAt).toLocaleString()}
           </span>
         </div>

@@ -1,0 +1,46 @@
+{
+  "date": "2026-09-16T09:43:07.015Z",
+  "executable": "D:\\AI\\project Sarathi\\dist-installer\\win-unpacked\\Sarathi.exe",
+  "results": [
+    {
+      "name": "Packaged archive contains main, preload, renderer and speech worker",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged renderer and preload load with isolated profile",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged theme button switches both palettes and saves preference",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged safeStorage round trip uses isolated profile",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged document endpoints reject an unauthorized synthetic file",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged STT returns a usable configuration error",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged local speech startup reports missing-model error",
+      "status": "PASS"
+    },
+    {
+      "name": "Production worker loads from ASAR in a real utility process",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged native ONNX transcribes cached non-default model offline",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged stop before silence returns the final utterance",
+      "status": "PASS"
+    }
+  ]
+}

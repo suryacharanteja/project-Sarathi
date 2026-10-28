@@ -62,6 +62,9 @@ export function createOverlayWindow(options: OverlayWindowOptions): BrowserWindo
     backgroundColor: '#00000000'
   })
 
+  overlay.webContents.on('will-navigate', (event) => event.preventDefault())
+  overlay.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+
   if (process.env['ELECTRON_RENDERER_URL']) {
     overlay.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {

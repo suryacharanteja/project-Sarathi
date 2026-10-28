@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.node.json",
+  "include": [
+    "src/**/*.test.ts"
+  ],
+  "exclude": [],
+  "compilerOptions": {
+    "composite": false,
+    "allowImportingTsExtensions": true,
+    "jsx": "react-jsx",
+    "types": [
+      "node"
+    ]
+  }
+}

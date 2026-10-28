@@ -15,7 +15,7 @@ export const DocumentViewerPanel = forwardRef<
         transform: mirrorFlip ? 'scaleX(-1)' : undefined,
         fontSize: `${fontSize}px`,
         lineHeight: 1.5,
-        color: '#f5f5f5',
+        color: 'var(--text-hi)',
         fontFamily: '"Georgia", serif',
         scrollbarWidth: 'none'
       }}

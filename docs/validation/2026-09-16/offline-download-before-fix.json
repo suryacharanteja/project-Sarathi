@@ -1,0 +1,12 @@
+{
+  "date": "2026-09-16T05:59:48.724Z",
+  "model": "Xenova/whisper-small",
+  "modelCache": "D:\\AI\\project Sarathi\\cache\\offline-validation\\models",
+  "results": [
+    {
+      "name": "Offline STT validation",
+      "status": "FAIL",
+      "error": "The local speech model is not downloaded yet.\n\nfalse !== true\n"
+    }
+  ]
+}

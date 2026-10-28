@@ -58,6 +58,7 @@ import {
 } from './documents/extract-text'
 import { extractPptxSlides } from './documents/extract-pptx'
 import { convertToPdf } from './documents/convert-to-pdf'
+import { createDocumentAccess } from './documents/access'
 import { basename, extname } from 'path'
 import { readFileSync, writeFileSync } from 'fs'
 import mammoth from 'mammoth'
@@ -116,6 +117,7 @@ const MINI_SIZE = 64
 const MINI_MARGIN = 16
 
 export function registerIpcHandlers(window: BrowserWindow): void {
+  const documentAccess = createDocumentAccess(window.webContents)
   const originalMinimumSize = window.getMinimumSize()
   let previousBounds: Rectangle | null = null
 
@@ -298,62 +300,70 @@ export function registerIpcHandlers(window: BrowserWindow): void {
 
   // For the PDF / Document viewer modes — returns the raw file path (PDF is
   // rendered client-side by pdfjs-dist) or routes DOCX/TXT to getDocumentHtml.
-  ipcMain.handle(IPC_CHANNELS.getDocumentFilePath, async (): Promise<GetDocumentFilePathResult> => {
-    const result = await dialog.showOpenDialog(window, {
-      properties: ['openFile'],
-      filters: [{ name: 'Documents', extensions: ['pdf', 'docx', 'pptx', 'txt', 'md'] }]
-    })
-    if (result.canceled || result.filePaths.length === 0) {
-      return { cancelled: true }
-    }
-    const filePath = result.filePaths[0]
-    const fileName = basename(filePath)
-    const ext = extname(filePath).toLowerCase()
-
-    // PPTX/DOCX: show the file exactly as it looks (not a text
-    // reconstruction) by converting to PDF via LibreOffice first, then
-    // reusing the same pixel-exact PdfViewerPanel a real PDF already gets.
-    if (ext === '.pptx' || ext === '.docx') {
-      const converted = await convertToPdf(filePath)
-      if (converted.pdfPath) {
-        // Word count / AI context still reads the ORIGINAL file's text —
-        // best-effort only, never blocks the exact-visual result above.
-        const text =
-          ext === '.pptx'
-            ? (await extractPptxSlides(filePath)).map((s) => `${s.title}\n${s.body}`).join('\n\n')
-            : await extractDocxAsFormattedText(filePath).catch(() => undefined)
-        return { filePath: converted.pdfPath, fileName, kind: 'pdf', text }
+  ipcMain.handle(IPC_CHANNELS.getDocumentFilePath, async (event): Promise<GetDocumentFilePathResult> => {
+    try {
+      documentAccess.assertSender(event)
+      const result = await dialog.showOpenDialog(window, {
+        properties: ['openFile'],
+        filters: [{ name: 'Documents', extensions: ['pdf', 'docx', 'pptx', 'txt', 'md'] }]
+      })
+      if (result.canceled || result.filePaths.length === 0) {
+        return { cancelled: true }
       }
-      if (ext === '.pptx') {
-        // No text-based fallback exists for PPTX in this viewer — Speaker
-        // mode has never supported a reconstructed-text view of a deck.
-        return { error: converted.error }
-      }
-      // DOCX still has a real fallback: the existing formatted-text/HTML
-      // path, unaffected by LibreOffice being unavailable.
-    }
+      const filePath = result.filePaths[0]
+      const fileName = basename(filePath)
+      const ext = extname(filePath).toLowerCase()
 
-    // The OS dialog's filter can be bypassed via its own "All Files" option,
-    // so an unsupported type (e.g. an unconvertible .pptx above) can still
-    // reach here.
-    if (!SUPPORTED_DOCUMENT_EXTENSIONS.includes(ext.slice(1))) {
-      return { error: `".${ext.slice(1)}" isn't a supported format. Use PDF, DOCX, PPTX, TXT, or MD.` }
+      // PPTX/DOCX: show the file exactly as it looks (not a text
+      // reconstruction) by converting to PDF via LibreOffice first, then
+      // reusing the same pixel-exact PdfViewerPanel a real PDF already gets.
+      if (ext === '.pptx' || ext === '.docx') {
+        const converted = await convertToPdf(filePath)
+        if (converted.pdfPath) {
+          // Word count / AI context still reads the ORIGINAL file's text —
+          // best-effort only, never blocks the exact-visual result above.
+          const text =
+            ext === '.pptx'
+              ? await extractPptxSlides(filePath)
+                  .then((slides) => slides.map((s) => `${s.title}\n${s.body}`).join('\n\n'))
+                  .catch(() => undefined)
+              : await extractDocxAsFormattedText(filePath).catch(() => undefined)
+          return { filePath: documentAccess.grant(converted.pdfPath), fileName, kind: 'pdf', text }
+        }
+        if (ext === '.pptx') {
+          // No text-based fallback exists for PPTX in this viewer — Speaker
+          // mode has never supported a reconstructed-text view of a deck.
+          return { error: converted.error }
+        }
+        // DOCX still has a real fallback: the existing formatted-text/HTML
+        // path, unaffected by LibreOffice being unavailable.
+      }
+
+      // The OS dialog's filter can be bypassed via its own "All Files" option,
+      // so an unsupported type (e.g. an unconvertible .pptx above) can still
+      // reach here.
+      if (!SUPPORTED_DOCUMENT_EXTENSIONS.includes(ext.slice(1))) {
+        return { error: `".${ext.slice(1)}" isn't a supported format. Use PDF, DOCX, PPTX, TXT, or MD.` }
+      }
+      const kind = ext === '.pdf' ? 'pdf' : 'document'
+      const text = await extractText(filePath)
+      // A PDF still renders visually via its own page-canvas viewer even with
+      // no extractable text (e.g. a scanned document) — only reject when the
+      // format has no other way to show anything at all.
+      if (kind === 'document' && text === UNSUPPORTED_TEXT) {
+        return { error: 'No extractable text found in this file.' }
+      }
+      return { filePath: documentAccess.grant(filePath), fileName, kind, text }
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to open the selected file.' }
     }
-    const kind = ext === '.pdf' ? 'pdf' : 'document'
-    const text = await extractText(filePath)
-    // A PDF still renders visually via its own page-canvas viewer even with
-    // no extractable text (e.g. a scanned document) — only reject when the
-    // format has no other way to show anything at all.
-    if (kind === 'document' && text === UNSUPPORTED_TEXT) {
-      return { error: 'No extractable text found in this file.' }
-    }
-    return { filePath, fileName, kind, text }
   })
 
   ipcMain.handle(
     IPC_CHANNELS.getDocumentHtml,
-    async (_event, filePath: string): Promise<GetDocumentHtmlResult> => {
+    async (event, filePath: string): Promise<GetDocumentHtmlResult> => {
       try {
+        filePath = documentAccess.resolve(event, filePath)
         const ext = extname(filePath).toLowerCase()
         if (ext === '.docx') {
           const result = await mammoth.convertToHtml({ path: filePath })
@@ -369,8 +379,9 @@ export function registerIpcHandlers(window: BrowserWindow): void {
 
   ipcMain.handle(
     IPC_CHANNELS.readDocumentBytes,
-    (_event, filePath: string): ReadDocumentBytesResult => {
+    (event, filePath: string): ReadDocumentBytesResult => {
       try {
+        filePath = documentAccess.resolve(event, filePath)
         return { data: new Uint8Array(readFileSync(filePath)) }
       } catch (error) {
         return { error: error instanceof Error ? error.message : 'Failed to read the selected file.' }

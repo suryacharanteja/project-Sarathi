@@ -1,0 +1,85 @@
+{
+  "results": [
+    {
+      "name": "Invalid docx selection returns a structured error",
+      "status": "PASS"
+    },
+    {
+      "name": "Invalid exe selection returns a structured error",
+      "status": "PASS"
+    },
+    {
+      "name": "Cancelled picker leaves no selected document",
+      "status": "PASS"
+    },
+    {
+      "name": "Missing selected PDF returns a structured error",
+      "status": "PASS"
+    },
+    {
+      "name": "Native picker failure returns a structured error",
+      "status": "PASS"
+    },
+    {
+      "name": "Production renderer and preload load",
+      "status": "PASS"
+    },
+    {
+      "name": "Windows safeStorage encrypts synthetic key on disk and decrypts through IPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Real IPC rejects unselected files through both document endpoints",
+      "status": "PASS"
+    },
+    {
+      "name": "Picker-authorized TXT can be read through real IPC",
+      "status": "PASS"
+    },
+    {
+      "name": "No-key/no-model STT startup returns an actionable failure",
+      "status": "PASS"
+    },
+    {
+      "name": "Real speech utility process exit settles model request (attempt 1)",
+      "status": "PASS"
+    },
+    {
+      "name": "Real speech utility process exit settles model request (attempt 2)",
+      "status": "PASS"
+    },
+    {
+      "name": "Generate synthetic PDF fixture in Chromium",
+      "status": "PASS"
+    },
+    {
+      "name": "DOCX visual conversion or formatted fallback works with real parsers",
+      "status": "PASS"
+    },
+    {
+      "name": "Settings renderer displays secure-storage failure (availability injected)",
+      "status": "PASS"
+    },
+    {
+      "name": "Failed replacement preserves the existing PDF and permits retry",
+      "status": "PASS"
+    },
+    {
+      "name": "Production PDF canvas renders and initial audio failure offers Retry",
+      "status": "PASS"
+    },
+    {
+      "name": "Real mic audio track and worklet acquire/release without recording",
+      "status": "PASS"
+    },
+    {
+      "name": "Real system audio track and worklet acquire/release without recording",
+      "status": "PASS"
+    },
+    {
+      "name": "Smoke harness completion",
+      "status": "FAIL",
+      "error": "Timed out after 45 seconds"
+    }
+  ]
+}

@@ -64,7 +64,7 @@ export function MinimizedBubble({ onRestore }: { onRestore: () => void }): React
     <Tooltip label="Click to expand · drag to move">
       <button
         onMouseDown={handleMouseDown}
-        className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-neutral-950/95 shadow-2xl transition hover:scale-105"
+        className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-[var(--bg-edge)] bg-[var(--bg-surface)] shadow-2xl transition hover:scale-105"
         // Inline, not backdrop-blur-xl — see index.css's .elevation-3 comment.
         style={{ backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
       >

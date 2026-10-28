@@ -15,12 +15,14 @@ export function Toggle({
   const button = (
     <button
       type="button"
+      role="switch"
+      aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className="flex items-center gap-2 rounded text-sm text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
+      className="flex min-h-12 items-center gap-2 rounded text-sm text-[var(--text-hi)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
     >
       <span
         className={`flex h-4 w-4 items-center justify-center rounded border transition ${
-          checked ? 'border-neutral-900 bg-neutral-900 text-white' : 'border-black/20 bg-white'
+          checked ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-[var(--bg-edge)] bg-[var(--bg-surface)]'
         }`}
       >
         {checked && <Check size={12} strokeWidth={3} />}

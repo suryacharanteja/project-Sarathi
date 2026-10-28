@@ -1,0 +1,26 @@
+{
+  "date": "2026-09-16T06:21:17.088Z",
+  "model": "Xenova/whisper-small",
+  "modelCache": "D:\\AI\\project Sarathi\\cache\\offline-validation\\models",
+  "results": [
+    {
+      "name": "Fresh no-key router selects cached non-default model",
+      "status": "PASS"
+    },
+    {
+      "name": "Synthetic speech transcribed by native cached model",
+      "status": "PASS",
+      "transcript": "The project team will review the delivery schedule tomorrow morning. Please confirm the next meeting time.",
+      "elapsedMs": 3200
+    },
+    {
+      "name": "Five consecutive speech turns each produce one final",
+      "status": "PASS"
+    },
+    {
+      "name": "Offline STT validation",
+      "status": "FAIL",
+      "error": "Timeout: window.smoke.final.length === 7"
+    }
+  ]
+}

@@ -40,7 +40,7 @@ export function BookmarkRail({
       {bookmarks.map((pos) => (
         <div
           key={pos}
-          className="absolute -translate-y-1/2 text-[10px] leading-none text-indigo-400"
+          className="absolute -translate-y-1/2 text-[10px] leading-none text-[var(--accent)]"
           style={{ top: `${Math.min(100, Math.max(0, (pos / range) * 100))}%` }}
           title="Bookmark"
         >
